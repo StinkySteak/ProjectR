@@ -6,37 +6,29 @@ using Fusion.Sockets;
 using System;
 
 /// <summary>
-/// Class to manage Fusion Session (Start Game Session, Callbacks)
+/// Class for game loop, mechanics
 /// </summary>
-public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
+public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
-    NetworkRunner Runner => RunnerInstance.NetworkRunner;
+    public static LevelManager Instance { get; set; }
 
-    public void InitializeClient()
+    [Header("Prefabs")]
+    public NetworkObject PlayerDataPrefab;
+    public NetworkObject PlayerPrefab;
+
+    private void Awake()
     {
-        Runner.AddCallbacks(this);
-        Runner.AddCallbacks(CallbackManager.Instance);
+        Instance = this;
     }
 
-    public void StartAuto()
+    void SpawnPlayerData(PlayerRef _ref)
     {
-        StartSimulation("session", GameMode.AutoHostOrClient);
-    }
+        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref, (runner, obj) => InitPlayer(obj));
 
-    /// <summary>
-    /// Call this to start any game (client/Host)
-    /// </summary>
-    public void StartSimulation(string _sessionName, GameMode _gamemode)
-    {
-        Runner.StartGame(new()
+        void InitPlayer(NetworkObject obj)
         {
-            SessionName = _sessionName,
-            GameMode = _gamemode,
-            PlayerCount = 16,
-            Scene = 1, // Scene Game is Scene of Index 1
-            SceneManager = GetComponent<NetworkSceneManagerDefault>(),
-            Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); }
-        });
+            
+        }
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
@@ -81,7 +73,7 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
 
     void INetworkRunnerCallbacks.OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-
+        SpawnPlayerData(player);
     }
 
     void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -118,4 +110,10 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     {
 
     }
+}
+
+public enum Team
+{
+    ISP,
+    Hacker
 }
