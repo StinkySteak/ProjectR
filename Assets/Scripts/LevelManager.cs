@@ -12,6 +12,8 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
     public static LevelManager Instance { get; set; }
 
+    public Transform SpawnPosition;
+
     [Header("Prefabs")]
     public NetworkObject PlayerDataPrefab;
     public NetworkObject PlayerPrefab;
@@ -23,14 +25,22 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     void SpawnPlayerData(PlayerRef _ref)
     {
-        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref, (runner, obj) => InitPlayer(obj));
+        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
 
         void InitPlayer(NetworkObject obj)
         {
             
         }
     }
+    void SpawnPlayerController(PlayerRef _ref)
+    {
+        Runner.Spawn(PlayerPrefab, SpawnPosition.position, Quaternion.identity, _ref, (runner, obj) => InitPlayer(obj));
 
+        void InitPlayer(NetworkObject obj)
+        {
+
+        }
+    }
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
     {
 
@@ -74,6 +84,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
     void INetworkRunnerCallbacks.OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         SpawnPlayerData(player);
+        SpawnPlayerController(player);
     }
 
     void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)

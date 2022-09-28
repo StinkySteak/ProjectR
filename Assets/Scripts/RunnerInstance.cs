@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
+using Unity.VisualScripting;
 
 /// <summary>
 /// Used for to prevent NULL runner & re-establish new runner
@@ -17,7 +18,12 @@ public class RunnerInstance : Singleton<RunnerInstance>
     NetworkRunner GetRunner()
     {
         if (Runner == null)
+        {
             Runner = gameObject.AddComponent<NetworkRunner>();
+        }
+
+        if (!Runner.TryGetComponent(out NetworkEvents events))
+            Runner.AddComponent<NetworkEvents>();
 
         return Runner;
     }

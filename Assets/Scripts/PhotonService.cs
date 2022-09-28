@@ -33,7 +33,7 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
             SessionName = _sessionName,
             GameMode = _gamemode,
             PlayerCount = 16,
-            Scene = 1, // Scene Game is Scene of Index 1
+            Scene = 0,
             SceneManager = GetComponent<NetworkSceneManagerDefault>(),
             Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); }
         });
