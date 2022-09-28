@@ -84,8 +84,7 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
     }
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        
-
+        Runner.RemoveCallbacks(this);
     }
     // 1. Collect input from devices
     void IBeforeUpdate.BeforeUpdate()

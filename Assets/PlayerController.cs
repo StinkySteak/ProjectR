@@ -29,8 +29,6 @@ public class PlayerController : Agent
 
         var input = Input.FixedInput;
 
-        print(input.MoveDirection);
-
         // Here we process input and set properties related to movement / look.
         // For following lines, we should use Input.FixedInput only. This property holds input for fixed updates.
 
