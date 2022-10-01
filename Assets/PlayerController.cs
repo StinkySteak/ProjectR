@@ -150,8 +150,7 @@ public class PlayerController : Agent
 
             var cameraTransform = PlayerCamera.LocalPlayer.transform;
 
-            cameraTransform.position = _cameraHandle.position;
-            cameraTransform.rotation = _cameraHandle.rotation;
+            cameraTransform.SetPositionAndRotation(_cameraHandle.position, _cameraHandle.rotation);
         }
 
        // Weapons.OnRender();

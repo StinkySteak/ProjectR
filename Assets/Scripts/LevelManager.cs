@@ -25,21 +25,17 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     void SpawnPlayerData(PlayerRef _ref)
     {
-        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
+        if (!RunnerInstance.NetworkRunner.IsServer)
+            return;
 
-        void InitPlayer(NetworkObject obj)
-        {
-            
-        }
+        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
     }
     void SpawnPlayerController(PlayerRef _ref)
     {
-        Runner.Spawn(PlayerPrefab, SpawnPosition.position, Quaternion.identity, _ref, (runner, obj) => InitPlayer(obj));
+        if (!RunnerInstance.NetworkRunner.IsServer)
+            return;
 
-        void InitPlayer(NetworkObject obj)
-        {
-
-        }
+        Runner.Spawn(PlayerPrefab, SpawnPosition.position, Quaternion.identity, _ref);
     }
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
     {
