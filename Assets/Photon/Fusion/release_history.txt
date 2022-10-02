@@ -1,5 +1,11 @@
 # 1.1.2
 
+## F
+
+### Build 579 (Sep 19, 2022)
+
+- Marking 1.1.2 final
+
 ## Nightly
 
 ### Build 578 (Sep 17, 2022)
