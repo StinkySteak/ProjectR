@@ -4,5 +4,6 @@ using UnityEngine;
 
 public class InGameHUD : Singleton<InGameHUD>
 {
-
+    public GameObject DespawnedPanel;
+    public GameObject SpawnedPanel;
 }

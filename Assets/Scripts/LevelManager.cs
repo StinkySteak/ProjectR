@@ -23,6 +23,17 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         Instance = this;
     }
 
+    public void OnPlayerDespawned(NetworkObject obj)
+    {
+        var player = PlayerManager.Instance.GetPlayer(obj.InputAuthority);
+
+        player.State = PlayerState.Despawned;
+
+        Runner.Despawn(obj);
+    }
+
+   
+
     void SpawnPlayerData(PlayerRef _ref)
     {
         if (!RunnerInstance.NetworkRunner.IsServer)
@@ -30,7 +41,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
     }
-    void SpawnPlayerController(PlayerRef _ref)
+    public void SpawnPlayerController(PlayerRef _ref)
     {
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
@@ -80,7 +91,6 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
     void INetworkRunnerCallbacks.OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         SpawnPlayerData(player);
-        SpawnPlayerController(player);
     }
 
     void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)

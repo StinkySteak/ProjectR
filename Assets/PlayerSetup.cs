@@ -11,6 +11,7 @@ public class PlayerSetup : NetworkBehaviour
     public static PlayerSetup LocalPlayer { get; set; }
 
     public GameObject[] RemoteVisual;
+    public GameObject[] LocalVisual;
 
     public MeshRenderer Renderer;
 
@@ -27,6 +28,11 @@ public class PlayerSetup : NetworkBehaviour
 
         PlayerData.OnPlayerInitialized += OnPlayerInitilized;
 
+        if (Object.HasStateAuthority)
+        {
+            PlayerData.State = PlayerState.Spawned;
+        }
+
         OnPlayerInitilized();
     }
     void OnPlayerInitilized()
@@ -42,12 +48,12 @@ public class PlayerSetup : NetworkBehaviour
         if (PlayerData.Team != Player.LocalPlayer.Team)
             Renderer.material = Material_Enemy;
 
-        if (Object.HasInputAuthority)
-        {
-            print("Disabling Visuals");
+        var hasInputAuth = Object.HasInputAuthority;
 
-            foreach (var visual in RemoteVisual)
-                visual.SetActive(false);
-        }
+        foreach (var visual in RemoteVisual)
+            visual.SetActive(!hasInputAuth);
+
+        foreach (var visual in LocalVisual)
+            visual.SetActive(hasInputAuth);
     }
 }

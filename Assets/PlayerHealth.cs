@@ -5,10 +5,27 @@ using Fusion;
 
 public class PlayerHealth : NetworkBehaviour
 {
-    [Networked, HideInInspector] public int Health { get; set; }
+    public ParticleSystem BloodFx;
+
+    [Networked(OnChanged = nameof(OnHealthChanged)), HideInInspector] public int Health { get; set; }
     public int MaxHealth = 100;
 
     public Team Team => PlayerManager.Instance.GetPlayer(Object.InputAuthority).Team;
+
+    static void OnHealthChanged(Changed<PlayerHealth> changed)
+    {
+        var newHealth = changed.Behaviour.Health;
+        changed.LoadOld();
+        var oldHealth = changed.Behaviour.Health;
+
+        print($"Health is changed from {oldHealth} to {newHealth}");
+
+        if (newHealth < oldHealth)
+        {
+            //play fx
+            changed.Behaviour.BloodFx.Play();
+        }
+    }
 
     public override void Spawned()
     {
@@ -29,7 +46,7 @@ public class PlayerHealth : NetworkBehaviour
 
         if (Health <= 0)
         {
-
+            LevelManager.Instance.OnPlayerDespawned(Object);
         }
     }
 }
