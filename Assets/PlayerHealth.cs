@@ -18,7 +18,7 @@ public class PlayerHealth : NetworkBehaviour
         changed.LoadOld();
         var oldHealth = changed.Behaviour.Health;
 
-        print($"Health is changed from {oldHealth} to {newHealth}");
+        //  print($"Health is changed from {oldHealth} to {newHealth}");
 
         if (newHealth < oldHealth)
         {
@@ -38,6 +38,13 @@ public class PlayerHealth : NetworkBehaviour
         var attackerTeam = PlayerManager.Instance.GetPlayer(_attacker).Team;
 
         return attackerTeam != Team;
+    }
+
+    public void AddHealth(int _addition)
+    {
+        Health += _addition;
+
+        Health = Mathf.Clamp(Health, 0, 100);
     }
 
     public void ApplyDamage(int _damage, PlayerRef _attacker)

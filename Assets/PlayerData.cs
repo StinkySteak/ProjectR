@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class PlayerData : Singleton<PlayerData>
 {
-    public Team Team;
-    public string Nickname;
+    public Team Team { get; set; }
+    public string Nickname { get; set; }
 
     public void SetNickname()
     {

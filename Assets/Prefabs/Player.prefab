@@ -49,6 +49,9 @@ MonoBehaviour:
   _Nickname: 
   _Kill: 0
   _Death: 0
+  _Team: 0
+  _State: 1
+  _IsInitialized: 0
 --- !u!114 &2746846564237376683
 MonoBehaviour:
   m_ObjectHideFlags: 0

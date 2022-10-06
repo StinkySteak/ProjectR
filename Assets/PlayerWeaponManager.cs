@@ -21,6 +21,12 @@ public class PlayerWeaponManager : NetworkBehaviour
         }
     }
 
+    public void AddAmmo(int _amount)
+    {
+        ActiveWeapon.TotalAmmo += _amount;
+    }
+
+
     public void InputFire()
     {
         ActiveWeapon.InputFire();

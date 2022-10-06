@@ -10,14 +10,14 @@ public class PlayerManager : Singleton<PlayerManager>
     /// </summary>
     public Dictionary<PlayerRef, Player> SpawnedPlayers { get; set; } = new();
 
-    // public Dictionary<PlayerRef, Player> SpawnedPlayerObjects { get; set; } = new(); //PlayerSetup.cs hasnt been made
+    public Dictionary<PlayerRef, PlayerSetup> SpawnedPlayerObjects { get; set; } = new(); //PlayerSetup.cs hasnt been made
 
     /// <summary>
     /// method is called by Player.cs when Spawned OR Despawned
     /// </summary>
     /// <param name="_ref"></param>
     /// <param name="_player"></param>
-    public void AddPlayer(PlayerRef _ref,Player _player)
+    public void AddPlayer(PlayerRef _ref, Player _player)
     {
         if (SpawnedPlayers.TryGetValue(_ref, out Player _existedPlayer))
         {
@@ -39,7 +39,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
         foreach (var pair in SpawnedPlayers)
         {
-            if(pair.Value == _player)
+            if (pair.Value == _player)
             {
                 expectedPair = pair;
                 break;
@@ -48,20 +48,27 @@ public class PlayerManager : Singleton<PlayerManager>
 
         SpawnedPlayers.Remove(expectedPair.Key);
     }
-    //disabled: PlayerSetup.cs hasnt been made
 
-    //public void AddPlayerObj(PlayerRef _ref, PlayerSetup _player)
-    //{
-    //    if (SpawnedPlayerObjects.TryGetValue(_ref, out PlayerSetup _existedPlayer))
-    //    {
-    //        if (_player == _existedPlayer)
-    //            return;
 
-    //        SpawnedPlayersObject.Remove(_ref);
-    //    }
+    public void AddPlayerObj(PlayerRef _ref, PlayerSetup _player)
+    {
+        if (SpawnedPlayerObjects.ContainsKey(_ref))
+            return;
 
-    //    SpawnedPlayerObjects.Add(_ref, _player);
-    //}
+        SpawnedPlayerObjects.Add(_ref, _player);
+    }
+
+    public bool TryGetPlayerObj(PlayerRef _ref, out PlayerSetup player)
+    {
+        if (SpawnedPlayerObjects.TryGetValue(_ref, out PlayerSetup _existedPlayer))
+        {
+            player = _existedPlayer;
+            return true;
+        }
+
+        player = null;
+        return false;
+    }
 
     public Player GetPlayer(PlayerRef _ref)
     {
@@ -73,5 +80,9 @@ public class PlayerManager : Singleton<PlayerManager>
 
         Debug.LogError($"Player is not valid: {_ref}");
         return null;
+    }
+    public Team GetPlayerTeam(PlayerRef _ref)
+    {
+        return GetPlayer(_ref).Team;
     }
 }

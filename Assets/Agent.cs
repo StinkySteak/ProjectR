@@ -24,7 +24,7 @@ namespace Projectiles
 
         public override void Spawned()
         {
-            print("Agent: Spawned");
+           // print("Agent: Spawned");
 
             // Explicit KCC initialization. This needs to be called before using API, otherwise changes could be overriden by implicit initialization from KCC.Start() or KCC.Spawned()
             _kcc.Initialize(EKCCDriver.Fusion);

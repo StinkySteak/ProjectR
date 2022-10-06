@@ -4,19 +4,89 @@ using UnityEngine;
 using Fusion;
 using Fusion.Sockets;
 using System;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// Class for game loop, mechanics
 /// </summary>
 public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
+    public int RequiredPlayerToStart = 2;
+    public float PreparationTime = 20;
+
+
+    [Serializable]
+    public class Advancement
+    {
+        public TeamAdvance ISP;
+        public TeamAdvance Hacker;
+
+        public TeamAdvance[] All => new TeamAdvance[] { ISP, Hacker };
+
+        public TeamAdvance GetMyTeamAdvance(Team _team)
+        {
+            foreach (var adv in All)
+            {
+                if (adv.Team == _team)
+                    return adv;
+            }
+
+            Debug.LogError("No Team Found");
+            return null;
+        }
+    }
+
+    [Serializable]
+    public class TeamAdvance
+    {
+        public Team Team;
+        public Transform[] SpawnPos;
+        public Barrier SpawnBarrier;
+        public GameObject[] PropertyToEnable;
+        public GameObject[] PropertyToDisable;
+    }
+
     public static LevelManager Instance { get; set; }
 
-    public Transform SpawnPosition;
+
+    [Space]
+    public Advancement[] Advancements;
 
     [Header("Prefabs")]
     public NetworkObject PlayerDataPrefab;
     public NetworkObject PlayerPrefab;
+
+    [Networked(OnChanged = nameof(OnAdvanceChanged))] public int Advance { get; set; }
+
+    static void OnAdvanceChanged(Changed<LevelManager> changed)
+    {
+        changed.Behaviour.UpdateAdvanceProperties();
+    }
+
+    void UpdateAdvanceProperties()
+    {
+        foreach (var player in PlayerManager.Instance.SpawnedPlayerObjects)
+            player.Value.ManageColliders();
+
+        foreach (var adv in Advancements)
+        {
+            foreach (var prop in adv.All)
+            {
+                bool isMyTeam = prop.Team == Player.LocalPlayer.Team;
+
+                if (!isMyTeam)
+                    continue;
+
+                foreach (var item in prop.PropertyToEnable)
+                    item.SetActive(true);
+
+                foreach (var item in prop.PropertyToDisable)
+                    item.SetActive(false);
+            }
+        }
+    }
+
+    public Advancement ActiveAdvance => Advancements[Advance];
 
     private void Awake()
     {
@@ -32,7 +102,17 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         Runner.Despawn(obj);
     }
 
-   
+    void OnPlayerLeft(PlayerRef _ref)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (PlayerManager.Instance.TryGetPlayerObj(_ref, out var player))
+            Runner.Despawn(player.GetComponent<NetworkObject>());
+
+        Runner.Despawn(PlayerManager.Instance.GetPlayer(_ref).Object);
+    }
+
 
     void SpawnPlayerData(PlayerRef _ref)
     {
@@ -46,8 +126,24 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
 
-        Runner.Spawn(PlayerPrefab, SpawnPosition.position, Quaternion.identity, _ref);
+        Runner.Spawn(PlayerPrefab, GetSpawnPos(PlayerManager.Instance.GetPlayerTeam(_ref)), Quaternion.identity, _ref);
     }
+
+    Vector3 GetSpawnPos(Team _team)
+    {
+        foreach (var adv in ActiveAdvance.All)
+        {
+            if (adv.Team == _team)
+            {
+                return adv.SpawnPos[UnityEngine.Random.Range(0, adv.SpawnPos.Length - 1)].position;
+            }
+        }
+
+        Debug.LogError("No Matching Advance Team");
+        return default;
+    }
+
+
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
     {
 
@@ -95,7 +191,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-
+        OnPlayerLeft(player);
     }
 
     void INetworkRunnerCallbacks.OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data)
