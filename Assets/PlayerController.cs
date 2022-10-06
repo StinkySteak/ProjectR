@@ -148,10 +148,9 @@ public class PlayerController : Agent
             Vector2 pitchRotation = KCC.RenderData.GetLookRotation(true, false);
             _cameraPivot.localRotation = Quaternion.Euler(pitchRotation);
 
-            var cameraTransform = PlayerCamera.LocalPlayer.transform;
+            var cameraTransform = PropertyManager.Instance.PlayerCamera.transform;
 
-            cameraTransform.position = _cameraHandle.position;
-            cameraTransform.rotation = _cameraHandle.rotation;
+            cameraTransform.SetPositionAndRotation(_cameraHandle.position, _cameraHandle.rotation);
         }
 
        // Weapons.OnRender();

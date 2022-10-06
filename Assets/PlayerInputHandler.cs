@@ -132,24 +132,10 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
 
         RenderInput.Buttons.Set(ActionButton.Jump, Input.GetKey(KeyCode.Space));
 
-        /*  RenderInput.Buttons.Set(EInputButtons.Fire, Input.GetMouseButton(0));
-          RenderInput.Buttons.Set(EInputButtons.AltFire, Input.GetMouseButton(1));
-          
-          RenderInput.Buttons.Set(EInputButtons.Reload, Input.GetKey(KeyCode.R));
+        RenderInput.Buttons.Set(ActionButton.Fire, Input.GetMouseButton(0));
+        RenderInput.Buttons.Set(ActionButton.Fire_2, Input.GetMouseButton(1));
 
-          for (int i = (int)KeyCode.Alpha0; i <= (int)KeyCode.Alpha9; i++)
-          {
-              if (Input.GetKey((KeyCode)i) == true)
-              {
-                  RenderInput.WeaponButton = (byte)(i - (int)KeyCode.Alpha0 + 1);
-                  break;
-              }
-          }
-
-          if (RenderInput.WeaponButton == 0)
-          {
-              RenderInput.WeaponButton = GetScrollWeaponButton();
-          } */
+        RenderInput.Buttons.Set(ActionButton.Reload, Input.GetKey(KeyCode.R));
 
         // Process cached input for next OnInput() call, represents accumulated inputs for all render frames since last fixed update.
 
@@ -167,7 +153,6 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
         CachedInput.MoveDirection = CachedMoveDirection / CachedMoveDirectionSize;
         CachedInput.LookRotationDelta += RenderInput.LookRotationDelta;
         CachedInput.Buttons = new NetworkButtons(CachedInput.Buttons.Bits | RenderInput.Buttons.Bits);
-        //  CachedInput.WeaponButton = _renderInput.WeaponButton != 0 ? _renderInput.WeaponButton : _cachedInput.WeaponButton;
     }
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
@@ -219,77 +204,77 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
 
     void INetworkRunnerCallbacks.OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnDisconnectedFromServer(NetworkRunner runner)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ArraySegment<byte> data)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnSceneLoadDone(NetworkRunner runner)
     {
-       
+
     }
 
     void INetworkRunnerCallbacks.OnSceneLoadStart(NetworkRunner runner)
     {
-       
+
     }
 }
 

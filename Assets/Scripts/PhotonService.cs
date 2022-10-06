@@ -12,6 +12,9 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
 {
     NetworkRunner Runner => RunnerInstance.NetworkRunner;
 
+    public static event Action OnRunnerStart;
+    public static event Action OnRunnerStartFailed;
+
     public void InitializeClient()
     {
         Runner.AddCallbacks(this);
@@ -26,9 +29,14 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     /// <summary>
     /// Call this to start any game (client/Host)
     /// </summary>
-    public void StartSimulation(string _sessionName, GameMode _gamemode)
+    public async void StartSimulation(string _sessionName, GameMode _gamemode)
     {
-        Runner.StartGame(new()
+        if (Runner.IsRunning)
+            return;
+
+        OnRunnerStart?.Invoke();
+
+        var result = await Runner.StartGame(new()
         {
             SessionName = _sessionName,
             GameMode = _gamemode,
@@ -37,6 +45,9 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
             SceneManager = GetComponent<NetworkSceneManagerDefault>(),
             Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); }
         });
+
+        if (!result.Ok)
+            OnRunnerStartFailed?.Invoke();
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
