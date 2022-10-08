@@ -31,10 +31,17 @@ public class Plug : NetworkBehaviour
 
     public float PlayerPlatformSpeed = 10;
 
+  //  [Tooltip("Used for if CollisionExit is not called, check distance instead")]
+  //  public float RemoveCollisionMaxDistance = 2;
+
+    List<KCC> LeavingKCC = new();
+
     MoveType MovingType { get; set; }
     int PushingPlayer { get; set; }
 
     Vector3 LastKinematicVelocity { get; set; }
+
+   
 
     public void SetMove(MoveType _type)
     {
@@ -74,11 +81,21 @@ public class Plug : NetworkBehaviour
 
         CheckIfDistanceIsReached();
 
+        LeavingKCC.Clear();
+
         foreach (var kcc in KCCOnTop)
         {
+            if (kcc.transform.position.y < transform.position.y)
+                LeavingKCC.Add(kcc);
+
             print($"KCCOnTop: {KCCOnTop.Count} LastKinematicVelocity: {LastKinematicVelocity}");
             kcc.SetExternalVelocity(LastKinematicVelocity);
             print(kcc.FixedData.DynamicVelocity);
+        }
+
+        foreach (var kcc in LeavingKCC)
+        {
+            KCCOnTop.Remove(kcc);
         }
     }
 
@@ -86,7 +103,7 @@ public class Plug : NetworkBehaviour
     {
         float dist = Vector3.Distance(transform.position, Waypoints[LastWaypointCount + 1].position);
 
-        if(dist <= 2)
+        if (dist <= 2)
         {
             OnPointReached();
         }

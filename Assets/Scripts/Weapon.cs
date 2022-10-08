@@ -5,7 +5,7 @@ using Fusion;
 
 public class Weapon : NetworkBehaviour
 {
-    PlayerWeaponManager PlayerWeaponManager { get;  set; }
+    PlayerWeaponManager PlayerWeaponManager { get; set; }
 
     public ParticleSystem MuzzleFlashFx;
     public ParticleSystem RemoteMuzzleFlashFx;
@@ -22,10 +22,16 @@ public class Weapon : NetworkBehaviour
 
     public int BaseDamage = 30;
 
-    public float InAccuracy = 0.1f;
+    public float MaxInAccuracy = 0.1f;
+
+    public float InAccuracyIncreasePerShot;
+
+    public float InAccuracyDecrease;
+
+    float CurrentInAccuracy;
 
     public float ReloadDuration = 0.8f;
-    TickTimer ReloadTimer { get; set; }
+    [Networked] TickTimer ReloadTimer { get; set; }
     [Networked] TickTimer FireTimer { get; set; }
 
     [Networked(OnChanged = nameof(OnStartReloading))] public bool IsReloading { get; set; }
@@ -87,6 +93,8 @@ public class Weapon : NetworkBehaviour
 
     static void OnFire(Changed<Weapon> changed)
     {
+        print("OnFire");
+
         if (!changed.Behaviour.FireTimer.IsRunning)
             return;
 
@@ -161,7 +169,7 @@ public class Weapon : NetworkBehaviour
 
     public void InputFire()
     {
-        if (Runner.IsResimulation)
+        if (!Runner.IsForward)
             return;
 
         if (CurrentBullet <= 0 || FireTimer.IsTrueRunning() || IsReloading)
@@ -173,7 +181,7 @@ public class Weapon : NetworkBehaviour
     {
         var direction = ProjectilePoint.forward;
 
-        // InAccuracyGenerator = new NetworkRNG(Runner.TicksExecuted);
+        var nextInAccuracy
 
         var x = Random.Range(-InAccuracy, InAccuracy);
         var y = Random.Range(-InAccuracy, InAccuracy);
@@ -185,7 +193,7 @@ public class Weapon : NetworkBehaviour
 
         var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
 
-        LastFireData = FireData.Create(false, hitPos);
+
 
         foreach (var hit in Hits)
         {
@@ -204,6 +212,9 @@ public class Weapon : NetworkBehaviour
                 }
             }
         }
+
+        if (hitCount <= 0)
+            LastFireData = FireData.Create(false, hitPos);
 
         FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
         CurrentBullet--;
