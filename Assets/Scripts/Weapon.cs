@@ -137,6 +137,8 @@ public class Weapon : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        InAccuracy -=  InAccuracyDecrease * Runner.DeltaTime;
+
         if (CurrentBullet <= 0 && !IsReloading)
             InputReload();
 
