@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
+using System;
 
 public class PlayerWeaponManager : NetworkBehaviour
 {
@@ -24,10 +25,14 @@ public class PlayerWeaponManager : NetworkBehaviour
     /// </summary>
     void SetWeaponVisual ()
     {
-        foreach (var weapon in WeaponList)
-            weapon.gameObject.SetActive(false);
+        int weaponIdex = 0;
 
-        ActiveWeapon.gameObject.SetActive(true);
+        foreach (var weapon in WeaponList)
+        {
+            if(weaponIdex == ActiveWeaponIndex) { weapon.gameObject.SetActive(true); Debug.Log("Current Weapon " + weaponIdex); }
+            else { weapon.gameObject.SetActive(false); }
+            weaponIdex++;
+        }
     }
 
     public override void Spawned()
@@ -37,6 +42,9 @@ public class PlayerWeaponManager : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+
+        int previousWeapon = ActiveWeaponIndex;
+
         if (Runner.TryGetInputForPlayer(Object.InputAuthority, out PlayerInput input))
         {
             if (input.Buttons.IsSet(ActionButton.Fire))
@@ -44,7 +52,24 @@ public class PlayerWeaponManager : NetworkBehaviour
 
             if (input.Buttons.IsSet(ActionButton.Reload))
                 InputReload();
+
+            ProcessWeaponKeyInput(input);
+
         }
+
+        if(previousWeapon != ActiveWeaponIndex)
+        {
+            SetWeaponVisual();
+        }
+
+
+
+    }
+
+    private void ProcessWeaponKeyInput(PlayerInput input)
+    {
+        if(input.Buttons.IsSet(ActionButton.weaponSwitch1)) { ActiveWeaponIndex = 0; Debug.Log("Weapon 1"); }
+        else if(input.Buttons.IsSet(ActionButton.weaponSwitch2)) { ActiveWeaponIndex = 1; Debug.Log("Weapon 2"); }
     }
 
     public void AddAmmo(int _amount)
@@ -67,4 +92,6 @@ public class PlayerWeaponManager : NetworkBehaviour
     {
         ActiveWeapon.InputReload();
     }
+
+
 }

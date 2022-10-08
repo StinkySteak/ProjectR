@@ -137,6 +137,9 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
 
         RenderInput.Buttons.Set(ActionButton.Reload, Input.GetKey(KeyCode.R));
 
+        RenderInput.Buttons.Set(ActionButton.weaponSwitch1, Input.GetKey(KeyCode.Alpha1));
+        RenderInput.Buttons.Set(ActionButton.weaponSwitch2, Input.GetKey(KeyCode.Alpha2));
+
         // Process cached input for next OnInput() call, represents accumulated inputs for all render frames since last fixed update.
 
         float deltaTime = Time.deltaTime;
@@ -297,6 +300,9 @@ public enum ActionButton
     Fire = 5,
     Fire_2 = 6,
     Reload = 7,
+
+    weaponSwitch1 = 8,
+    weaponSwitch2 = 9,
 
 
 }
