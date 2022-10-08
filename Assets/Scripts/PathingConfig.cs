@@ -8,9 +8,6 @@ public class PathingConfig : ScriptableObject
 {
 
     [SerializeField] private Transform pathParent;
-    [SerializeField] private GameObject plugModel;
-
-   
 
     public List<Transform> GetPathPoints()
     {
@@ -22,13 +19,4 @@ public class PathingConfig : ScriptableObject
 
         return pathPoints;
     }
-
-    public GameObject getPlugModel()
-    {
-        return plugModel;
-    }
-
-
-
-
 }

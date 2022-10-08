@@ -2,62 +2,137 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
+using Fusion.KCC;
 
+public enum MoveType
+{
+    Idle,
+    Forward,
+    Backward
+}
+
+/// <summary>
+/// class for managing cart movement, not to be confused with Cart.cs
+/// </summary>
+/// 
 public class Plug : NetworkBehaviour
 {
-    [Range(1, 10)] [SerializeField] float speed = 4f;
+    public List<KCC> KCCOnTop;
 
-    private bool ServicerOn;
-    private bool HackerOn;
+    public NetworkRigidbody NetworkRigidbody;
 
-    private int HackerCount;
-    private int ServicerCount;
+    public List<Transform> Waypoints;
+    private int LastWaypointCount;
 
-    public PathingConfig pathConfig;
-    private List<Transform> waypoints;
-    private int waypointCount;
+    public float BaseForwardSpeed;
+    public float BaseBackwardSpeed;
 
-    private bool canMove;
-    private bool whenToGo;
+    public float MinDistanceToReachPoint = 2;
 
+    public float PlayerPlatformSpeed = 10;
 
+    MoveType MovingType { get; set; }
+    int PushingPlayer { get; set; }
 
+    Vector3 LastKinematicVelocity { get; set; }
 
-
-    private void Awake()
+    public void SetMove(MoveType _type)
     {
-        
+        MovingType = _type;
+    }
+    public void SetPushingPlayer(int _count)
+    {
+        PushingPlayer = _count;
+    }
+
+    float GetForwardSpeed()
+    {
+        return PushingPlayer * BaseForwardSpeed;
     }
 
     public override void FixedUpdateNetwork()
     {
-       
+        if (!Object.HasStateAuthority)
+            return;
+
+        LastKinematicVelocity = default;
+
+        switch (MovingType)
+        {
+            case MoveType.Idle:
+                NetworkRigidbody.Rigidbody.velocity = default;
+                break;
+            case MoveType.Forward:
+                MoveForward();
+                break;
+            case MoveType.Backward:
+                MoveBackward();
+                break;
+            default:
+                break;
+        }
+
+        CheckIfDistanceIsReached();
+
+        foreach (var kcc in KCCOnTop)
+        {
+            print($"KCCOnTop: {KCCOnTop.Count} LastKinematicVelocity: {LastKinematicVelocity}");
+            kcc.SetExternalVelocity(LastKinematicVelocity);
+            print(kcc.FixedData.DynamicVelocity);
+        }
     }
 
-    private void OnTriggerStay(Collider other)
+    void CheckIfDistanceIsReached()
     {
-        
+        float dist = Vector3.Distance(transform.position, Waypoints[LastWaypointCount + 1].position);
+
+        if(dist <= 2)
+        {
+            OnPointReached();
+        }
     }
 
-    private void OnTriggerExit(Collider other)
+    void OnPointReached()
     {
-        
+        print("OnPointReached!");
+        LevelManager.Instance.OnPointReached();
+        LastWaypointCount++;
     }
 
     private void MoveForward()
     {
+        var direction = Waypoints[LastWaypointCount + 1].position - transform.position;
 
+        var velocity = direction.normalized * GetForwardSpeed();
+
+        var nextPos = velocity + NetworkRigidbody.Rigidbody.position;
+
+        LastKinematicVelocity = velocity * PlayerPlatformSpeed;
+
+        NetworkRigidbody.Rigidbody.MovePosition(nextPos);
     }
 
     private void MoveBackward()
     {
+        var velocity = Vector3.zero * BaseBackwardSpeed;
 
+        NetworkRigidbody.Rigidbody.velocity = velocity;
     }
-
-    IEnumerator WaitOnPoint()
+    public void OnPlayerCollisionEnter(KCC collision)
     {
-        yield return new WaitForSeconds(.1f);
+        if (collision.transform.position.y > transform.position.y) //is above
+        {
+            if (KCCOnTop.Contains(collision))
+                return;
+
+            KCCOnTop.Add(collision);
+        }
     }
-
-
+    public void OnPlayerCollisionExit(KCC collision)
+    {
+        if (KCCOnTop.Contains(collision))
+        {
+            KCCOnTop.Remove(collision);
+        }
+    }
 }

@@ -18,6 +18,13 @@ public class PlayerSetup : NetworkBehaviour
     public Material Material_Ally;
     public Material Material_Enemy;
 
+
+    /// <summary>
+    /// used for gun sfx, not to be confused with foostep AudioSource
+    /// </summary>
+    public AudioSource AudioSource;
+    public AudioSource Footstep_AudioSource;
+
     Player PlayerData = null;
 
     //CACHE COMPONENT DOWN BELOW
@@ -78,11 +85,9 @@ public class PlayerSetup : NetworkBehaviour
         {
             var col = adv.GetMyTeamAdvance(PlayerData.Team).SpawnBarrier.Collider;
             KCC.SetIgnoreCollider(col, true);
-            print($"Disabling collider : {col}");
+         //   print($"Disabling collider : {col}");
         }
 
         MainCollider.tag = "Player";
-
-        print("Colliders Managed");
     }
 }

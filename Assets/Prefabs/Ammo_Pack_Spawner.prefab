@@ -123,6 +123,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _interpolationDataSource: 0
   SpawnInterval: 10
-  SpawnOffset: {x: 0, y: 1, z: 0}
-  PackPrefab: {fileID: 1079724601023308008, guid: 286308069074bdd41a484fb802e23917,
+  SpawnOffset: {x: 0, y: 0.5, z: 0}
+  PackPrefab: {fileID: 1079724601023308008, guid: 855af715acb47c346a361a1535e42f61,
     type: 3}

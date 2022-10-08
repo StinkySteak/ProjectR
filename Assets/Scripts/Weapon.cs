@@ -5,6 +5,8 @@ using Fusion;
 
 public class Weapon : NetworkBehaviour
 {
+    PlayerWeaponManager PlayerWeaponManager { get;  set; }
+
     public ParticleSystem MuzzleFlashFx;
     public ParticleSystem RemoteMuzzleFlashFx;
     public GameObject BulletTracer;
@@ -30,6 +32,9 @@ public class Weapon : NetworkBehaviour
 
     [Networked(OnChanged = nameof(OnFire))] FireData LastFireData { get; set; }
 
+    public AudioSource AudioSource => PlayerWeaponManager.PlayerSetup.AudioSource;
+    public AudioClip AudioClip;
+
     public struct FireData : INetworkStruct
     {
         public Vector3 LastHitPos;
@@ -54,7 +59,7 @@ public class Weapon : NetworkBehaviour
 
     public float MaxDistance = 50;
 
-    List<LagCompensatedHit> Hits = new();
+    readonly List<LagCompensatedHit> Hits = new();
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
@@ -70,6 +75,8 @@ public class Weapon : NetworkBehaviour
 
     public override void Spawned()
     {
+        PlayerWeaponManager = GetComponent<PlayerWeaponManager>();
+
         if (Object.HasInputAuthority)
         {
             Cursor.visible = false;
@@ -85,6 +92,8 @@ public class Weapon : NetworkBehaviour
 
         changed.Behaviour.RemoteMuzzleFlashFx.Play();
         changed.Behaviour.MuzzleFlashFx.Play();
+
+        changed.Behaviour.AudioSource.PlayOneShot(changed.Behaviour.AudioClip);
 
         changed.Behaviour.SpawnBulletTracer();
         changed.Behaviour.SpawnBulletImpact();
@@ -152,6 +161,9 @@ public class Weapon : NetworkBehaviour
 
     public void InputFire()
     {
+        if (Runner.IsResimulation)
+            return;
+
         if (CurrentBullet <= 0 || FireTimer.IsTrueRunning() || IsReloading)
             return;
 

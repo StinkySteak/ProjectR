@@ -21,6 +21,9 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         public TeamAdvance ISP;
         public TeamAdvance Hacker;
 
+        public GameObject[] UniversalPropertyToEnable;
+        public GameObject[] UniversalPropertyToDisable;
+
         public TeamAdvance[] All => new TeamAdvance[] { ISP, Hacker };
 
         public TeamAdvance GetMyTeamAdvance(Team _team)
@@ -63,6 +66,14 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         changed.Behaviour.UpdateAdvanceProperties();
     }
 
+    /// <summary>
+    /// set new advance!
+    /// </summary>
+    public void OnPointReached()
+    {
+        Advance++;
+    }
+
     void UpdateAdvanceProperties()
     {
         foreach (var player in PlayerManager.Instance.SpawnedPlayerObjects)
@@ -82,6 +93,15 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
                 foreach (var item in prop.PropertyToDisable)
                     item.SetActive(false);
+            }
+
+            foreach (var prop in adv.UniversalPropertyToEnable)
+            {
+                prop.gameObject.SetActive(true);
+            }
+            foreach (var prop in adv.UniversalPropertyToDisable)
+            {
+                prop.gameObject.SetActive(false);
             }
         }
     }

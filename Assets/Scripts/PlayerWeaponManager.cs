@@ -5,9 +5,16 @@ using Fusion;
 
 public class PlayerWeaponManager : NetworkBehaviour
 {
+    public PlayerSetup PlayerSetup;
+
     public Weapon[] WeaponList;
 
     public Weapon ActiveWeapon;
+
+    public override void Spawned()
+    {
+        PlayerSetup = GetComponent<PlayerSetup>();
+    }
 
     public override void FixedUpdateNetwork()
     {

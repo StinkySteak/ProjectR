@@ -35,6 +35,9 @@ public class PlayerHealth : NetworkBehaviour
 
     public bool CanTakeDamageFrom(PlayerRef _attacker)
     {
+        if (Object == null || !Object.IsValid)
+            return false;
+
         var attackerTeam = PlayerManager.Instance.GetPlayer(_attacker).Team;
 
         return attackerTeam != Team;
