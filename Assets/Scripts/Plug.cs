@@ -21,7 +21,8 @@ public class Plug : NetworkBehaviour
 
     public NetworkRigidbody NetworkRigidbody;
 
-    public List<Transform> Waypoints;
+    [SerializeField] private PathingConfig path;
+    List<Transform> Waypoints;
     private int LastWaypointCount;
 
     public float BaseForwardSpeed;
@@ -41,7 +42,11 @@ public class Plug : NetworkBehaviour
 
     Vector3 LastKinematicVelocity { get; set; }
 
-   
+
+    private void Awake()
+    {
+        Waypoints = path.GetPathPoints();
+    }
 
     public void SetMove(MoveType _type)
     {
