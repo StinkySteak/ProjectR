@@ -28,6 +28,8 @@ public class Weapon : NetworkBehaviour
 
     public float InAccuracyDecrease;
 
+    public float InAccuracy;
+
     float CurrentInAccuracy;
 
     public float ReloadDuration = 0.8f;
@@ -135,6 +137,8 @@ public class Weapon : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        InAccuracy -=  InAccuracyDecrease * Runner.DeltaTime;
+
         if (CurrentBullet <= 0 && !IsReloading)
             InputReload();
 
@@ -181,7 +185,7 @@ public class Weapon : NetworkBehaviour
     {
         //var direction = ProjectilePoint.forward;
 
-        ////var nextInAccuracy
+        InAccuracy += InAccuracyIncreasePerShot;
 
         //var x = Random.Range(-InAccuracy, InAccuracy);
         //var y = Random.Range(-InAccuracy, InAccuracy);
