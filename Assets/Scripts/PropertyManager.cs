@@ -18,6 +18,10 @@ public class PropertyManager : Singleton<PropertyManager>
 
         InGameHUD.Instance.DespawnedPanel.SetActive(!_isSpawned);
         InGameHUD.Instance.SpawnedPanel.SetActive(_isSpawned);
+        InGameHUD.Instance.healthBarUI.SetActive(_isSpawned);
+        InGameHUD.Instance.waypointDistance.SetActive(_isSpawned);
+        InGameHUD.Instance.AmmoText.SetActive(_isSpawned);
+        InGameHUD.Instance.Ammo.SetActive(_isSpawned);
     }
 
     public void SpawnPlayer()
