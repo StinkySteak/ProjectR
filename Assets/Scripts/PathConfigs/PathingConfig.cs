@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[CreateAssetMenu(fileName = "Path Data", menuName = "PathConfigScriptableObjects")]
+[CreateAssetMenu(menuName = "PathConfigScriptableObjects")]
 public class PathingConfig : ScriptableObject 
 {
 
