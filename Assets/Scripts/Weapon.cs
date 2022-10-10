@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using Fusion;
 using UnityEditor.Timeline;
 
@@ -44,6 +46,8 @@ public class Weapon : NetworkBehaviour
 
     public AudioSource AudioSource => PlayerWeaponManager.PlayerSetup.AudioSource;
     public AudioClip AudioClip;
+
+    [SerializeField] private GameObject ammoText;
 
     public struct FireData : INetworkStruct
     {
@@ -90,6 +94,8 @@ public class Weapon : NetworkBehaviour
     {
         if (Object.HasInputAuthority)
         {
+            ammoText = InGameHUD.Instance.Ammo;
+            ammoText.GetComponent<TextMeshProUGUI>().text = TotalAmmo.ToString();
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
@@ -195,6 +201,7 @@ public class Weapon : NetworkBehaviour
         CurrentBullet = BulletPerMagazine;
 
         TotalAmmo = (remainingBullet + TotalAmmo) - BulletPerMagazine;
+        ammoText.GetComponent<TextMeshProUGUI>().text = TotalAmmo.ToString();
 
         IsReloading = false;
     }

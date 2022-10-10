@@ -9,6 +9,7 @@ public class PlayerHealth : NetworkBehaviour
 
     [Networked(OnChanged = nameof(OnHealthChanged)), HideInInspector] public int Health { get; set; }
     public int MaxHealth = 100;
+    private HealthBarUI healthBarUI;
 
     public Team Team => PlayerManager.Instance.GetPlayer(Object.InputAuthority).Team;
 
@@ -30,7 +31,9 @@ public class PlayerHealth : NetworkBehaviour
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
+            healthBarUI = FindObjectOfType<HealthBarUI>();
             Health = MaxHealth;
+            healthBarUI.SetMaxHealth(Health);
     }
 
     public bool CanTakeDamageFrom(PlayerRef _attacker)
@@ -48,11 +51,13 @@ public class PlayerHealth : NetworkBehaviour
         Health += _addition;
 
         Health = Mathf.Clamp(Health, 0, 100);
+        healthBarUI.SetHealth(Health);
     }
 
     public void ApplyDamage(int _damage, PlayerRef _attacker)
     {
         Health -= _damage;
+        healthBarUI.SetHealth(Health);
 
         if (Health <= 0)
         {

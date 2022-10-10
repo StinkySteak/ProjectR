@@ -8,6 +8,7 @@ public class PathingConfig : ScriptableObject
 {
 
     [SerializeField] private Transform pathParent;
+    public float totalDistance;
 
     public List<Transform> GetPathPoints()
     {
@@ -19,4 +20,5 @@ public class PathingConfig : ScriptableObject
 
         return pathPoints;
     }
+
 }
