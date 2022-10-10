@@ -5,13 +5,13 @@ using Fusion;
 
 public class PlayerHealth : NetworkBehaviour
 {
+    public static PlayerHealth LocalPlayer;
+
     public ParticleSystem BloodFx;
 
     [Networked(OnChanged = nameof(OnHealthChanged)), HideInInspector] public int Health { get; set; }
     public int MaxHealth = 100;
     private HealthBarUI healthBarUI;
-
-    public Team Team => PlayerManager.Instance.GetPlayer(Object.InputAuthority).Team;
 
     static void OnHealthChanged(Changed<PlayerHealth> changed)
     {
@@ -28,12 +28,23 @@ public class PlayerHealth : NetworkBehaviour
         }
     }
 
+    public Team GetTeam()
+    {
+        if (PlayerManager.Instance.TryGetPlayerTeam(Object.InputAuthority, out var team))
+        {
+            return team;
+        }
+
+        return Team.Invalid;
+    }
+
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
-            healthBarUI = FindObjectOfType<HealthBarUI>();
             Health = MaxHealth;
-            healthBarUI.SetMaxHealth(Health);
+
+        if (Object.HasInputAuthority)
+            LocalPlayer = this;
     }
 
     public bool CanTakeDamageFrom(PlayerRef _attacker)
@@ -41,9 +52,11 @@ public class PlayerHealth : NetworkBehaviour
         if (Object == null || !Object.IsValid)
             return false;
 
-        var attackerTeam = PlayerManager.Instance.GetPlayer(_attacker).Team;
-
-        return attackerTeam != Team;
+        if (PlayerManager.Instance.TryGetPlayerTeam(_attacker, out var attackerTeam))
+        {
+            return attackerTeam != GetTeam();
+        }
+        return false;
     }
 
     public void AddHealth(int _addition)
@@ -51,13 +64,11 @@ public class PlayerHealth : NetworkBehaviour
         Health += _addition;
 
         Health = Mathf.Clamp(Health, 0, 100);
-        healthBarUI.SetHealth(Health);
     }
 
     public void ApplyDamage(int _damage, PlayerRef _attacker)
     {
         Health -= _damage;
-        healthBarUI.SetHealth(Health);
 
         if (Health <= 0)
         {

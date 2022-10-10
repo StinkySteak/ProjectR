@@ -70,19 +70,30 @@ public class PlayerManager : Singleton<PlayerManager>
         return false;
     }
 
-    public Player GetPlayer(PlayerRef _ref)
+    public bool TryGetPlayer(PlayerRef _ref, out Player _player)
     {
         foreach (var pair in SpawnedPlayers)
         {
             if (pair.Key == _ref)
-                return pair.Value;
+            {
+                _player = pair.Value;
+                return true;
+            }
         }
 
+        _player = null;
         Debug.LogError($"Player is not valid: {_ref}");
-        return null;
+        return false;
     }
-    public Team GetPlayerTeam(PlayerRef _ref)
+    public bool TryGetPlayerTeam(PlayerRef _ref, out Team _team)
     {
-        return GetPlayer(_ref).Team;
+        if(TryGetPlayer(_ref,out var _player))
+        {
+            _team = _player.Team;
+            return true;
+        }
+
+        _team = Team.Invalid;
+        return false;
     }
 }

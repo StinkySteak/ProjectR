@@ -40,7 +40,6 @@ public class PlayerCollision : NetworkBehaviour
 
         if (arg2.Collider.TryGetComponent(out Plug plug))
         {
-            print("plug");
             plug.OnPlayerCollisionEnter(KCC);
         }
     }

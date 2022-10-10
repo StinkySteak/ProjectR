@@ -10,6 +10,7 @@ using Projectiles;
 [RequireComponent(typeof(KCC), typeof(BeforeHitboxManagerUpdater), typeof(AfterHitboxManagerUpdater))]
 public class PlayerController : Agent
 {
+    PlayerSetup PlayerSetup;
     public PlayerInputHandler Input;
 
     public float MaxCameraAngle = 80;
@@ -58,7 +59,14 @@ public class PlayerController : Agent
             KCC.Jump(jumpRotation * JumpImpulse);
         }
 
+        
+
         // Another movement related actions here (crouch, ...)
+    }
+    public override void Spawned()
+    {
+        base.Spawned();
+        PlayerSetup = GetComponent<PlayerSetup>();
     }
     protected override void OnFixedUpdate()
     {
@@ -72,12 +80,7 @@ public class PlayerController : Agent
 
     protected override void ProcessLateFixedInput()
     {
-        // Executed after HitboxManager. Process other non-movement actions like shooting.
-
-        //if (Owner != null)
-        //{
-        //    Weapons.ProcessInput(Owner.Input);
-        //}
+        PlayerSetup.WeaponManager.OnInput(Input.FixedInput);
     }
 
     protected override void OnLateFixedUpdate()

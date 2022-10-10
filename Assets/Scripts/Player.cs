@@ -79,10 +79,13 @@ public class Player : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     void RPC_RequestRespawn(PlayerRef _ref, int _selectedPrimaryWeapon)
     {
-        if (PlayerManager.Instance.GetPlayer(_ref).State == PlayerState.Spawned)
-            return;
+        if (PlayerManager.Instance.TryGetPlayer(_ref, out var player))
+        {
+            if (player.State == PlayerState.Spawned)
+                return;
 
-        LevelManager.Instance.SpawnPlayerController(_ref, _selectedPrimaryWeapon);
+            LevelManager.Instance.SpawnPlayerController(_ref, _selectedPrimaryWeapon);
+        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

@@ -61,9 +61,16 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     [Networked(OnChanged = nameof(OnAdvanceChanged))] public int Advance { get; set; }
 
+    public static event Action OnRender;
+
     static void OnAdvanceChanged(Changed<LevelManager> changed)
     {
         changed.Behaviour.UpdateAdvanceProperties();
+    }
+
+    public override void Render()
+    {
+        OnRender?.Invoke();
     }
 
     /// <summary>
@@ -115,11 +122,12 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerDespawned(NetworkObject obj)
     {
-        var player = PlayerManager.Instance.GetPlayer(obj.InputAuthority);
+        if (PlayerManager.Instance.TryGetPlayer(obj.InputAuthority, out var player))
+        {
+            player.State = PlayerState.Despawned;
 
-        player.State = PlayerState.Despawned;
-
-        Runner.Despawn(obj);
+            Runner.Despawn(obj);
+        }
     }
 
     void OnPlayerLeft(PlayerRef _ref)
@@ -128,9 +136,14 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
             return;
 
         if (PlayerManager.Instance.TryGetPlayerObj(_ref, out var player))
-            Runner.Despawn(player.GetComponent<NetworkObject>());
+        {
+            Runner.Despawn(player.Object);
+        }
 
-        Runner.Despawn(PlayerManager.Instance.GetPlayer(_ref).Object);
+        if (PlayerManager.Instance.TryGetPlayer(_ref, out var _player))
+        {
+            Runner.Despawn(player.Object);
+        }
     }
 
 
@@ -146,7 +159,10 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
 
-        Runner.Spawn(PlayerPrefab, GetSpawnPos(PlayerManager.Instance.GetPlayerTeam(_ref)), Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
+        if(PlayerManager.Instance.TryGetPlayerTeam(_ref, out var team))
+        {
+            Runner.Spawn(PlayerPrefab, GetSpawnPos(team), Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
+        }
 
         void SetWeapon(NetworkObject obj)
         {
@@ -256,5 +272,6 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 public enum Team
 {
     ISP,
-    Hacker
+    Hacker,
+    Invalid
 }

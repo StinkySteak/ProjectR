@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
 using System;
+using Fusion.Sockets;
 
 public class PlayerWeaponManager : NetworkBehaviour
 {
+    public static PlayerWeaponManager LocalPlayer;
+
     public PlayerSetup PlayerSetup;
 
     public Weapon[] PrimaryWeapon;
@@ -28,7 +31,6 @@ public class PlayerWeaponManager : NetworkBehaviour
     /// </summary>
     [Networked(OnChanged = nameof(OnActiveWeaponChanged)), HideInInspector] int ActiveWeaponIndex { get; set; }
 
-
     public Weapon ActiveWeapon;
 
     public void Init(int _selectedWeaponIndex)
@@ -36,6 +38,7 @@ public class PlayerWeaponManager : NetworkBehaviour
         SelectedPrimaryWeaponIndex = _selectedWeaponIndex;
         ActiveWeaponIndex = SelectedPrimaryWeaponIndex;
     }
+
 
     static void OnActiveWeaponChanged(Changed<PlayerWeaponManager> changed)
     {
@@ -56,7 +59,7 @@ public class PlayerWeaponManager : NetworkBehaviour
             return;
         }
 
-     //   print(ActiveWeaponIndex);
+        //   print(ActiveWeaponIndex);
 
         PrimaryWeaponVisual[ActiveWeaponIndex].SetActive(true);
 
@@ -84,24 +87,21 @@ public class PlayerWeaponManager : NetworkBehaviour
     {
         PlayerSetup = GetComponent<PlayerSetup>();
 
+        if (Object.HasInputAuthority)
+            LocalPlayer = this;
+
         SetWeapon();
         SetWeaponVisual();
     }
 
-    public override void FixedUpdateNetwork()
+    public void OnInput(PlayerInput input)
     {
-        if (Runner.TryGetInputForPlayer(Object.InputAuthority, out PlayerInput input))
-        {
-            if (input.Buttons.IsSet(ActionButton.Fire))
-                InputFire();
+        if (input.Buttons.IsSet(ActionButton.Fire))
+            InputFire();
 
-            if (input.Buttons.IsSet(ActionButton.Reload))
-                InputReload();
-
-            ProcessWeaponKeyInput(input);
-        }
+        if (input.Buttons.IsSet(ActionButton.Reload))
+            InputReload();
     }
-
     private void ProcessWeaponKeyInput(PlayerInput input)
     {
         if (input.Buttons.IsSet(ActionButton.weaponSwitch1)) { ActiveWeaponIndex = SelectedPrimaryWeaponIndex; Debug.Log("Weapon 1"); }
@@ -130,6 +130,4 @@ public class PlayerWeaponManager : NetworkBehaviour
     {
         ActiveWeapon.InputReload();
     }
-
-
 }

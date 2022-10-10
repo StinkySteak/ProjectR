@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion;
-using UnityEditor.Timeline;
 
 public class Weapon : NetworkBehaviour
 {
@@ -34,11 +33,13 @@ public class Weapon : NetworkBehaviour
 
     public float InAccuracyDecrease;
 
-    float InAccuracy;
+    [Networked, HideInInspector] public float InAccuracy { get; set; }
 
     public float ReloadDuration = 0.8f;
     [Networked] TickTimer ReloadTimer { get; set; }
     [Networked] TickTimer FireTimer { get; set; }
+
+
 
     [Networked(OnChanged = nameof(OnStartReloading))] public bool IsReloading { get; set; }
 
@@ -47,16 +48,15 @@ public class Weapon : NetworkBehaviour
     public AudioSource AudioSource => PlayerWeaponManager.PlayerSetup.AudioSource;
     public AudioClip AudioClip;
 
-    [SerializeField] private GameObject ammoText;
-
     public struct FireData : INetworkStruct
     {
         public Vector3 LastHitPos;
         public bool IsHit;
+        public int Tick;
 
         public static FireData Create(bool _isHit, Vector3 _pos)
         {
-            return new FireData() { IsHit = _isHit, LastHitPos = _pos };
+            return new FireData() { IsHit = _isHit, LastHitPos = _pos, Tick = RunnerInstance.NetworkRunner.Simulation.Tick };
         }
     }
 
@@ -76,7 +76,8 @@ public class Weapon : NetworkBehaviour
 
     public float MaxDistance = 50;
 
-    readonly List<LagCompensatedHit> Hits = new();
+    int LastShotTick;
+    bool BulletTrailSpawned;
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
@@ -94,19 +95,24 @@ public class Weapon : NetworkBehaviour
     {
         if (Object.HasInputAuthority)
         {
-            ammoText = InGameHUD.Instance.Ammo;
-            ammoText.GetComponent<TextMeshProUGUI>().text = TotalAmmo.ToString();
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
 
     }
 
+    bool IsFirstShot()
+    {
+        return !BulletTrailSpawned;
+    }
+
     static void OnFire(Changed<Weapon> changed)
     {
-        if (!changed.Behaviour.FireTimer.IsRunning)
+        if (!changed.Behaviour.IsFirstShot())
             return;
 
+
+        changed.Behaviour.BulletTrailSpawned = true;
         changed.Behaviour.RemoteMuzzleFlashFx.Play();
         changed.Behaviour.MuzzleFlashFx.Play();
 
@@ -115,11 +121,12 @@ public class Weapon : NetworkBehaviour
         changed.Behaviour.SpawnBulletTracer();
         changed.Behaviour.SpawnBulletImpact();
 
+        changed.Behaviour.BulletTrailSpawned = true;
+
         if (changed.Behaviour.Object.HasInputAuthority)
-        {
             changed.Behaviour.ShakeCamera();
-        }
     }
+
     void PlayAudio()
     {
         AudioSource.pitch = 1 + PitchCount;
@@ -155,7 +162,7 @@ public class Weapon : NetworkBehaviour
     public override void Render()
     {
         if (!FireTimer.IsTrueRunning())
-            PitchCount -= PitchDecreasePerTick;
+            PitchCount -= PitchDecreasePerTick * Runner.DeltaTime;
 
         PitchCount = Mathf.Clamp(PitchCount, 0, 2);
     }
@@ -169,7 +176,7 @@ public class Weapon : NetworkBehaviour
     {
         // decrease InAccuracy if player is not shooting for a while
         if (!FireTimer.IsTrueRunning())
-            InAccuracy -= InAccuracyDecrease;
+            InAccuracy -= InAccuracyDecrease * Runner.DeltaTime;
 
         InAccuracy = Mathf.Clamp(InAccuracy, MinInAccuracy, MaxInAccuracy);
 
@@ -196,14 +203,21 @@ public class Weapon : NetworkBehaviour
 
     void Reload()
     {
+        IsReloading = false;
+
         var remainingBullet = CurrentBullet;
 
-        CurrentBullet = BulletPerMagazine;
+        if (TotalAmmo >= BulletPerMagazine)
+        {
+            CurrentBullet = BulletPerMagazine;
 
-        TotalAmmo = (remainingBullet + TotalAmmo) - BulletPerMagazine;
-        ammoText.GetComponent<TextMeshProUGUI>().text = TotalAmmo.ToString();
+            TotalAmmo = (remainingBullet + TotalAmmo) - BulletPerMagazine;
+            return;
+        }
 
-        IsReloading = false;
+        CurrentBullet = TotalAmmo;
+
+        TotalAmmo = 0;
     }
 
     public void InputFire()
@@ -215,6 +229,20 @@ public class Weapon : NetworkBehaviour
     }
     void Fire()
     {
+        var AbleToFire = Runner.Simulation.Tick > LastShotTick + FireRate * Runner.Simulation.Config.TickRate;
+
+        //   print($"IsNotPredicted: {AbleToFire} => {Runner.Simulation.Tick} > {LastShotTick} + {FireRate * Runner.Simulation.Config.TickRate}");
+
+        //   if (!Runner.tick)
+        //       return;
+
+        //   if (!AbleToFire)
+        //       return;
+
+        FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
+
+        //   print(InAccuracy);
+
         var direction = ProjectilePoint.forward;
 
         InAccuracy += InAccuracyIncreasePerShot;
@@ -228,38 +256,42 @@ public class Weapon : NetworkBehaviour
 
         var random = new Vector3(x, y, z);
 
-        var hitCount = Runner.LagCompensation.RaycastAll(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, Hits, HitMask, true, HitOptions.IncludePhysX);
-
-        var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
-
-
-        foreach (var hit in Hits)
+        if (Runner.LagCompensation.Raycast(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, out var hit, HitMask, HitOptions.SubtickAccuracy))
         {
-            hitPos = hit.Point;
+            LastFireData = FireData.Create(true, hit.Point);
 
-            LastFireData = FireData.Create(true, hitPos);
-
-            if (!hit.GameObject.CompareTag("Player"))
-                continue;
-
-            if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
+            if (hit.GameObject.CompareTag("Player"))
             {
-                if (health.CanTakeDamageFrom(Object.InputAuthority))
+                if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
                 {
-                    health.ApplyDamage(BaseDamage, Object.InputAuthority);
+                    if (health.CanTakeDamageFrom(Object.InputAuthority))
+                        health.ApplyDamage(BaseDamage, Object.InputAuthority);
                 }
             }
         }
+        else
+        {
+            var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
 
-        print(InAccuracy);
-
-        if (hitCount <= 0)
             LastFireData = FireData.Create(false, hitPos);
+        }
 
-        FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
+
         CurrentBullet--;
 
-        PitchCount += IncreasePitchPerShot;
+        
+
+        LastShotTick = Runner.Simulation.Tick;
+
+        if (!Runner.IsResimulation)
+        {
+            PitchCount += IncreasePitchPerShot;
+            //  print($"{Runner.IsResimulation} {Runner.IsForward} {Runner.IsFirstTick} {Runner.TicksExecuted}");
+
+            BulletTrailSpawned = false;
+            //  print("BulletTrailSpawned : " + BulletTrailSpawned);
+        }
+
     }
 }
 

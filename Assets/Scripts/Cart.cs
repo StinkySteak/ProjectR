@@ -104,14 +104,17 @@ public class Cart : NetworkBehaviour
 
             ClosePlayers.Add(playerRef);
 
-            if (PlayerManager.Instance.GetPlayerTeam(playerRef) == Team.ISP)
+            if (PlayerManager.Instance.TryGetPlayerTeam(playerRef,out Team _team))
             {
-                ISPAmount++;
-                IsPushing = true;
-            }
-            else
-            {
-                HackerAmount++;
+                if(_team == Team.ISP)
+                {
+                    ISPAmount++;
+                    IsPushing = true;
+                }
+                else
+                {
+                    HackerAmount++;
+                }
             }
         }
 
@@ -128,8 +131,11 @@ public class Cart : NetworkBehaviour
     {
         foreach (var player in ClosePlayers)
         {
-            if (PlayerManager.Instance.GetPlayerTeam(player) == Team.Hacker) // there is a hacker, set it as contestd
+            if (PlayerManager.Instance.TryGetPlayerTeam(player, out var team)) // there is a hacker, set it as contestd
             {
+                if (team != Team.Hacker)
+                    return;
+
                 IsContested = true;
                 return;
             }

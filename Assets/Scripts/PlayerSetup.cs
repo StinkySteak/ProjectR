@@ -7,7 +7,7 @@ using Fusion.KCC;
 [OrderAfter(typeof(Player))]
 public class PlayerSetup : NetworkBehaviour
 {
-   
+
     public static PlayerSetup LocalPlayer { get; set; }
 
     public GameObject[] RemoteVisual;
@@ -38,19 +38,20 @@ public class PlayerSetup : NetworkBehaviour
 
     public override void Spawned()
     {
-        PlayerHealth = GetComponent<PlayerHealth>();
-        PlayerController = GetComponent<PlayerController>();
-        WeaponManager = GetComponent<PlayerWeaponManager>();
+        PlayerManager.Instance.AddPlayerObj(Object.InputAuthority, this);
+        PlayerManager.Instance.TryGetPlayer(Object.InputAuthority, out PlayerData);
+
+        if (Object.HasStateAuthority)
+            PlayerData.State = PlayerState.Spawned;
 
         if (Object.HasInputAuthority)
             LocalPlayer = this;
 
-        PlayerData = PlayerManager.Instance.GetPlayer(Object.InputAuthority);
+        PlayerController = GetComponent<PlayerController>();
+        PlayerHealth = GetComponent<PlayerHealth>();
+        WeaponManager = GetComponent<PlayerWeaponManager>();
 
         PlayerData.OnPlayerInitialized += OnPlayerInitilized;
-
-        if (Object.HasStateAuthority)
-            PlayerData.State = PlayerState.Spawned;
 
         OnPlayerInitilized();
     }
@@ -85,7 +86,7 @@ public class PlayerSetup : NetworkBehaviour
         {
             var col = adv.GetMyTeamAdvance(PlayerData.Team).SpawnBarrier.Collider;
             KCC.SetIgnoreCollider(col, true);
-         //   print($"Disabling collider : {col}");
+            //   print($"Disabling collider : {col}");
         }
 
         MainCollider.tag = "Player";

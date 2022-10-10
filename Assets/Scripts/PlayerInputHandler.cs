@@ -18,6 +18,7 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
 
     public PlayerInput CachedInput;
     public PlayerInput RenderInput;
+    public PlayerInput WeaponInput;
     public PlayerInput FixedInput;
 
     public PlayerInput BaseFixedInput;
@@ -132,10 +133,9 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
 
         RenderInput.Buttons.Set(ActionButton.Jump, Input.GetKey(KeyCode.Space));
 
-        RenderInput.Buttons.Set(ActionButton.Fire, Input.GetMouseButton(0));
-        RenderInput.Buttons.Set(ActionButton.Fire_2, Input.GetMouseButton(1));
-
         RenderInput.Buttons.Set(ActionButton.Reload, Input.GetKey(KeyCode.R));
+
+       
 
         RenderInput.Buttons.Set(ActionButton.weaponSwitch1, Input.GetKey(KeyCode.Alpha1));
         RenderInput.Buttons.Set(ActionButton.weaponSwitch2, Input.GetKey(KeyCode.Alpha2));
@@ -169,6 +169,9 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
         CachedInput.LookRotationDelta = default;
 
         RenderInput.LookRotationDelta = default;
+
+        gameplayInput.Buttons.Set(ActionButton.Fire, Input.GetMouseButton(0));
+        gameplayInput.Buttons.Set(ActionButton.Fire_2, Input.GetMouseButton(1));
 
         input.Set(gameplayInput);
     }
