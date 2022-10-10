@@ -101,6 +101,8 @@ public class PlayerWeaponManager : NetworkBehaviour
 
         if (input.Buttons.IsSet(ActionButton.Reload))
             InputReload();
+
+        ProcessWeaponKeyInput(input);
     }
     private void ProcessWeaponKeyInput(PlayerInput input)
     {
