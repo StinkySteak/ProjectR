@@ -31,7 +31,9 @@ public class Plug : NetworkBehaviour
     public float MinDistanceToReachPoint = 2;
 
     public float PlayerPlatformSpeed = 10;
-
+    private float dist;
+    public float distPlaceholder;
+        
   //  [Tooltip("Used for if CollisionExit is not called, check distance instead")]
   //  public float RemoveCollisionMaxDistance = 2;
 
@@ -46,6 +48,11 @@ public class Plug : NetworkBehaviour
     private void Awake()
     {
         Waypoints = path.GetPathPoints();
+
+        //Check Distance Between Plug and Goal
+        dist = GetDistanceToTarget();
+        distPlaceholder = dist;
+        MovingType = MoveType.Idle;
     }
 
     public void SetMove(MoveType _type)
@@ -73,6 +80,7 @@ public class Plug : NetworkBehaviour
         {
             case MoveType.Idle:
                 NetworkRigidbody.Rigidbody.velocity = default;
+                
                 break;
             case MoveType.Forward:
                 MoveForward();
@@ -102,6 +110,8 @@ public class Plug : NetworkBehaviour
         {
             KCCOnTop.Remove(kcc);
         }
+
+
     }
 
     void CheckIfDistanceIsReached()
@@ -112,6 +122,25 @@ public class Plug : NetworkBehaviour
         {
             OnPointReached();
         }
+    }
+
+    public float GetDistanceToTarget()
+    {
+        List<Transform> vPath = Waypoints;
+        float totalDistance = 0;
+
+        Vector3 current = transform.position;
+
+        //Iterate through vPath and find the distance between the nodes
+        for (int i = 0; i < vPath.Count; i++)
+        {
+            totalDistance += (vPath[i].transform.position - current).magnitude;
+            current = vPath[i].transform.position;
+            Debug.Log("At array " + i + "path position: " + current);
+        }
+
+        //minDistToGoal = totalDistance;
+        return totalDistance;
     }
 
     void OnPointReached()
@@ -132,6 +161,8 @@ public class Plug : NetworkBehaviour
         LastKinematicVelocity = velocity * PlayerPlatformSpeed;
 
         NetworkRigidbody.Rigidbody.MovePosition(nextPos);
+        dist--;
+        distPlaceholder = dist;
     }
 
     private void MoveBackward()
@@ -139,6 +170,8 @@ public class Plug : NetworkBehaviour
         var velocity = Vector3.zero * BaseBackwardSpeed;
 
         NetworkRigidbody.Rigidbody.velocity = velocity;
+        dist++;
+        distPlaceholder = dist;
     }
     public void OnPlayerCollisionEnter(KCC collision)
     {

@@ -2513,7 +2513,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 1
+  m_Value: 0.785
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -2872,7 +2872,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh28402
+  m_Name: pb_Mesh28410
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -5754,6 +5754,7 @@ GameObject:
   - component: {fileID: 1088348311}
   - component: {fileID: 1088348310}
   - component: {fileID: 1088348314}
+  - component: {fileID: 1088348315}
   m_Layer: 5
   m_Name: InGameHUD
   m_TagString: Untagged
@@ -5866,6 +5867,19 @@ MonoBehaviour:
   waypointDistance: {fileID: 39287761}
   AmmoText: {fileID: 1457519431}
   Ammo: {fileID: 1789223072}
+--- !u!114 &1088348315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1088348309}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0ea5ef3fe382b146a19aa6c2af3c1dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slider: {fileID: 231193796}
 --- !u!1 &1127021147
 GameObject:
   m_ObjectHideFlags: 0
