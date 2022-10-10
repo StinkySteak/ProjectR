@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
+using UnityEditor.Timeline;
 
 public class Weapon : NetworkBehaviour
 {
-    PlayerWeaponManager PlayerWeaponManager { get; set; }
+    public PlayerWeaponManager PlayerWeaponManager;
 
     public ParticleSystem MuzzleFlashFx;
     public ParticleSystem RemoteMuzzleFlashFx;
@@ -18,19 +19,20 @@ public class Weapon : NetworkBehaviour
     [Networked] public int CurrentBullet { get; set; } = 30;
     [Networked] public int TotalAmmo { get; set; } = 90;
 
+    public float ShakeDuration;
+
     public float FireRate = 0.15f;
 
     public int BaseDamage = 30;
 
     public float MaxInAccuracy = 0.1f;
+    public float MinInAccuracy = 0.01f;
 
     public float InAccuracyIncreasePerShot;
 
     public float InAccuracyDecrease;
 
-    public float InAccuracy;
-
-    float CurrentInAccuracy;
+    float InAccuracy;
 
     public float ReloadDuration = 0.8f;
     [Networked] TickTimer ReloadTimer { get; set; }
@@ -54,9 +56,12 @@ public class Weapon : NetworkBehaviour
         }
     }
 
-    public float ReloadTime { get; set; }
+    public float IncreasePitchPerShot;
+    public float PitchDecreasePerTick;
 
-    [Networked] NetworkRNG InAccuracyGenerator { get; set; } = new(100);
+    float PitchCount = 0;
+
+    public float ReloadTime { get; set; }
 
     [Space]
 
@@ -83,8 +88,6 @@ public class Weapon : NetworkBehaviour
 
     public override void Spawned()
     {
-        PlayerWeaponManager = GetComponent<PlayerWeaponManager>();
-
         if (Object.HasInputAuthority)
         {
             Cursor.visible = false;
@@ -95,19 +98,32 @@ public class Weapon : NetworkBehaviour
 
     static void OnFire(Changed<Weapon> changed)
     {
-        print("OnFire");
-
         if (!changed.Behaviour.FireTimer.IsRunning)
             return;
 
         changed.Behaviour.RemoteMuzzleFlashFx.Play();
         changed.Behaviour.MuzzleFlashFx.Play();
 
-        changed.Behaviour.AudioSource.PlayOneShot(changed.Behaviour.AudioClip);
+        changed.Behaviour.PlayAudio();
 
         changed.Behaviour.SpawnBulletTracer();
         changed.Behaviour.SpawnBulletImpact();
+
+        if (changed.Behaviour.Object.HasInputAuthority)
+        {
+            changed.Behaviour.ShakeCamera();
+        }
     }
+    void PlayAudio()
+    {
+        AudioSource.pitch = 1 + PitchCount;
+        AudioSource.PlayOneShot(AudioClip);
+    }
+    void ShakeCamera()
+    {
+        ShakeEffect.Instance.Shake(ShakeDuration);
+    }
+
     void SpawnBulletImpact()
     {
         if (!LastFireData.IsHit) return;
@@ -130,6 +146,14 @@ public class Weapon : NetworkBehaviour
         Destroy(obj, 2f);
     }
 
+    public override void Render()
+    {
+        if (!FireTimer.IsTrueRunning())
+            PitchCount -= PitchDecreasePerTick;
+
+        PitchCount = Mathf.Clamp(PitchCount, 0, 2);
+    }
+
     static void OnStartReloading(Changed<Weapon> changed)
     {
         //play animation & sfx
@@ -137,7 +161,11 @@ public class Weapon : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        InAccuracy -=  InAccuracyDecrease * Runner.DeltaTime;
+        // decrease InAccuracy if player is not shooting for a while
+        if (!FireTimer.IsTrueRunning())
+            InAccuracy -= InAccuracyDecrease;
+
+        InAccuracy = Mathf.Clamp(InAccuracy, MinInAccuracy, MaxInAccuracy);
 
         if (CurrentBullet <= 0 && !IsReloading)
             InputReload();
@@ -173,9 +201,6 @@ public class Weapon : NetworkBehaviour
 
     public void InputFire()
     {
-        if (!Runner.IsForward)
-            return;
-
         if (CurrentBullet <= 0 || FireTimer.IsTrueRunning() || IsReloading)
             return;
 
@@ -183,45 +208,51 @@ public class Weapon : NetworkBehaviour
     }
     void Fire()
     {
-        //var direction = ProjectilePoint.forward;
+        var direction = ProjectilePoint.forward;
 
         InAccuracy += InAccuracyIncreasePerShot;
 
-        //var x = Random.Range(-InAccuracy, InAccuracy);
-        //var y = Random.Range(-InAccuracy, InAccuracy);
-        //var z = Random.Range(-InAccuracy, InAccuracy);
+        if (InAccuracy >= MaxInAccuracy)
+            InAccuracy = MaxInAccuracy;
 
-        //var random = new Vector3(x, y, z);
+        var x = Random.Range(-InAccuracy, InAccuracy);
+        var y = Random.Range(-InAccuracy, InAccuracy);
+        var z = Random.Range(-InAccuracy, InAccuracy);
 
-        //var hitCount = Runner.LagCompensation.RaycastAll(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, Hits, HitMask, true, HitOptions.IncludePhysX);
+        var random = new Vector3(x, y, z);
 
-        //var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
+        var hitCount = Runner.LagCompensation.RaycastAll(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, Hits, HitMask, true, HitOptions.IncludePhysX);
+
+        var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
 
 
+        foreach (var hit in Hits)
+        {
+            hitPos = hit.Point;
 
-        //foreach (var hit in Hits)
-        //{
-        //    hitPos = hit.Point;
+            LastFireData = FireData.Create(true, hitPos);
 
-        //    LastFireData = FireData.Create(true, hitPos);
+            if (!hit.GameObject.CompareTag("Player"))
+                continue;
 
-        //    if (!hit.GameObject.CompareTag("Player"))
-        //        continue;
+            if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
+            {
+                if (health.CanTakeDamageFrom(Object.InputAuthority))
+                {
+                    health.ApplyDamage(BaseDamage, Object.InputAuthority);
+                }
+            }
+        }
 
-        //    if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
-        //    {
-        //        if (health.CanTakeDamageFrom(Object.InputAuthority))
-        //        {
-        //            health.ApplyDamage(BaseDamage, Object.InputAuthority);
-        //        }
-        //    }
-        //}
+        print(InAccuracy);
 
-        //if (hitCount <= 0)
-        //    LastFireData = FireData.Create(false, hitPos);
+        if (hitCount <= 0)
+            LastFireData = FireData.Create(false, hitPos);
 
-        //FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
-        //CurrentBullet--;
+        FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
+        CurrentBullet--;
+
+        PitchCount += IncreasePitchPerShot;
     }
 }
 

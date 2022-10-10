@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerData : Singleton<PlayerData>
 {
     public Team Team { get; set; }
-    public string Nickname { get; set; }
+    public string Nickname { get; set; } = "MyNickname";
 
     public void SetNickname()
     {

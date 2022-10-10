@@ -8,43 +8,88 @@ public class PlayerWeaponManager : NetworkBehaviour
 {
     public PlayerSetup PlayerSetup;
 
-    public Weapon[] WeaponList;
+    public Weapon[] PrimaryWeapon;
+    public GameObject[] PrimaryWeaponVisual;
+    [Space]
+    public Weapon SecondaryWeapon;
+    public GameObject SecondaryWeaponVisual;
 
+    public GameObject[] AllWeaponVisual => new GameObject[] { PrimaryWeaponVisual[0], PrimaryWeaponVisual[1], SecondaryWeaponVisual };
+
+    /// <summary>
+    /// This was set by player on respawn, (loadout)
+    /// </summary>
+    [Networked] public int SelectedPrimaryWeaponIndex { get; set; }
+
+    /// <summary>
+    /// 0, 1 => Primary Weapon
+    /// <para></para>
+    /// 2    => Secondary Weapon
+    /// </summary>
     [Networked(OnChanged = nameof(OnActiveWeaponChanged)), HideInInspector] int ActiveWeaponIndex { get; set; }
 
-    public Weapon ActiveWeapon => WeaponList[ActiveWeaponIndex];
+
+    public Weapon ActiveWeapon;
+
+    public void Init(int _selectedWeaponIndex)
+    {
+        SelectedPrimaryWeaponIndex = _selectedWeaponIndex;
+        ActiveWeaponIndex = SelectedPrimaryWeaponIndex;
+    }
 
     static void OnActiveWeaponChanged(Changed<PlayerWeaponManager> changed)
     {
         changed.Behaviour.SetWeaponVisual();
     }
 
-
     /// <summary>
     /// turning on/off weapon visual
     /// </summary>
-    void SetWeaponVisual ()
+    void SetWeaponVisual()
     {
-        int weaponIdex = 0;
+        foreach (var visual in AllWeaponVisual)
+            visual.SetActive(false);
 
-        foreach (var weapon in WeaponList)
+        if (ActiveWeaponIndex == 2) // is secondary
         {
-            if(weaponIdex == ActiveWeaponIndex) { weapon.gameObject.SetActive(true); Debug.Log("Current Weapon " + weaponIdex); }
-            else { weapon.gameObject.SetActive(false); }
-            weaponIdex++;
+            SecondaryWeaponVisual.SetActive(true);
+            return;
         }
+
+     //   print(ActiveWeaponIndex);
+
+        PrimaryWeaponVisual[ActiveWeaponIndex].SetActive(true);
+
+        if (Object.HasStateAuthority) // updating the ActiveWeapon class to for the non State Auth
+            return;
+
+        SetWeapon();
+    }
+
+    /// <summary>
+    /// Set ActiveWeapon Class
+    /// </summary>
+    void SetWeapon()
+    {
+        if (ActiveWeaponIndex == 2) // is secondary
+        {
+            ActiveWeapon = SecondaryWeapon;
+            return;
+        }
+
+        ActiveWeapon = PrimaryWeapon[ActiveWeaponIndex];
     }
 
     public override void Spawned()
     {
         PlayerSetup = GetComponent<PlayerSetup>();
+
+        SetWeapon();
+        SetWeaponVisual();
     }
 
     public override void FixedUpdateNetwork()
     {
-
-        int previousWeapon = ActiveWeaponIndex;
-
         if (Runner.TryGetInputForPlayer(Object.InputAuthority, out PlayerInput input))
         {
             if (input.Buttons.IsSet(ActionButton.Fire))
@@ -54,22 +99,15 @@ public class PlayerWeaponManager : NetworkBehaviour
                 InputReload();
 
             ProcessWeaponKeyInput(input);
-
         }
-
-        if(previousWeapon != ActiveWeaponIndex)
-        {
-            SetWeaponVisual();
-        }
-
-
-
     }
 
     private void ProcessWeaponKeyInput(PlayerInput input)
     {
-        if(input.Buttons.IsSet(ActionButton.weaponSwitch1)) { ActiveWeaponIndex = 0; Debug.Log("Weapon 1"); }
-        else if(input.Buttons.IsSet(ActionButton.weaponSwitch2)) { ActiveWeaponIndex = 1; Debug.Log("Weapon 2"); }
+        if (input.Buttons.IsSet(ActionButton.weaponSwitch1)) { ActiveWeaponIndex = SelectedPrimaryWeaponIndex; Debug.Log("Weapon 1"); }
+        else if (input.Buttons.IsSet(ActionButton.weaponSwitch2)) { ActiveWeaponIndex = 2; Debug.Log("Weapon 2"); }
+
+        SetWeapon();
     }
 
     public void AddAmmo(int _amount)

@@ -93,9 +93,9 @@ public class Plug : NetworkBehaviour
             if (kcc.transform.position.y < transform.position.y)
                 LeavingKCC.Add(kcc);
 
-            print($"KCCOnTop: {KCCOnTop.Count} LastKinematicVelocity: {LastKinematicVelocity}");
+          //  print($"KCCOnTop: {KCCOnTop.Count} LastKinematicVelocity: {LastKinematicVelocity}");
             kcc.SetExternalVelocity(LastKinematicVelocity);
-            print(kcc.FixedData.DynamicVelocity);
+         //   print(kcc.FixedData.DynamicVelocity);
         }
 
         foreach (var kcc in LeavingKCC)

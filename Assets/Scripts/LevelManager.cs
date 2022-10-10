@@ -141,12 +141,20 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
     }
-    public void SpawnPlayerController(PlayerRef _ref)
+    public void SpawnPlayerController(PlayerRef _ref, int _selectedPrimaryWeapon)
     {
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
 
-        Runner.Spawn(PlayerPrefab, GetSpawnPos(PlayerManager.Instance.GetPlayerTeam(_ref)), Quaternion.identity, _ref);
+        Runner.Spawn(PlayerPrefab, GetSpawnPos(PlayerManager.Instance.GetPlayerTeam(_ref)), Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
+
+        void SetWeapon(NetworkObject obj)
+        {
+            if (obj.TryGetComponent(out PlayerWeaponManager playerWeapon))
+            {
+                playerWeapon.Init(_selectedPrimaryWeapon);
+            }
+        }
     }
 
     Vector3 GetSpawnPos(Team _team)

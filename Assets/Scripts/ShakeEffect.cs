@@ -4,15 +4,50 @@ using UnityEngine;
 
 public class ShakeEffect : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static ShakeEffect Instance;
+    public AnimationCurve Curve;
+
+    float RemainingDuration;
+    float ElapsedTime;
+
+    private void Awake()
     {
-        
+        Instance = this;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Shake(float duration)
     {
-        
+        var prevDuration = RemainingDuration;
+
+        RemainingDuration = duration;
+
+        if (prevDuration > 0)
+        {
+            ElapsedTime = 0;
+            return;
+        }
+
+        StartCoroutine(ShakeCo());
+    }
+
+    IEnumerator ShakeCo()
+    {
+        Vector3 startPos = transform.localPosition;
+
+        ElapsedTime = 0;
+
+        while (ElapsedTime < RemainingDuration)
+        {
+            ElapsedTime += Time.deltaTime;
+
+            var strength = Curve.Evaluate(ElapsedTime / RemainingDuration);
+
+            transform.localPosition = startPos + Random.insideUnitSphere * strength;
+
+            yield return null;
+        }
+
+        RemainingDuration = 0;
+        transform.localPosition = Vector3.zero;
     }
 }

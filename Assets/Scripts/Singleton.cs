@@ -24,3 +24,20 @@ public class Singleton<T> : MonoBehaviour where T : Component
         DontDestroyOnLoad(this);
     }
 }
+
+/// <summary>
+/// base singleton pattern class
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class SceneSingleton<T> : MonoBehaviour where T : Component
+{
+    public static T Instance { get; set; }
+
+    public virtual void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = GetComponent<T>();
+        }
+    }
+}

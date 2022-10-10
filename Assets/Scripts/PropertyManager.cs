@@ -2,10 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PropertyManager : Singleton<PropertyManager>
+public class PropertyManager : SceneSingleton<PropertyManager>
 {
     public GameObject PlayerCamera;
     public GameObject SceneCamera;
+
+    public int SelectedPrimaryWeaponIndex;
 
     /// <summary>
     /// update property in the scene, such as UI, visual
@@ -27,5 +29,9 @@ public class PropertyManager : Singleton<PropertyManager>
     public void SpawnPlayer()
     {
         Player.LocalPlayer.RequestRespawn();
+    }
+    public void SetWeapon(int _index)
+    {
+        SelectedPrimaryWeaponIndex = _index;
     }
 }
