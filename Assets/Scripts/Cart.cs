@@ -25,12 +25,14 @@ public class Cart : NetworkBehaviour
     public TickTimer CheckOverlapTimer { get; set; }
 
     TickTimer StartMovingBackwardTime { get; set; }
+    private bool isGameStarted = true;
 
     public float CheckOverlapInterval = 0.1f;
 
     public override void Spawned()
     {
         Plug = GetComponent<Plug>();
+        isGameStarted = true;
     }
 
     private void OnDrawGizmos()
@@ -64,7 +66,14 @@ public class Cart : NetworkBehaviour
             return MoveType.Idle;
 
         if (!StartMovingBackwardTime.IsTrueRunning())
-            return MoveType.Backward;
+        {
+            if(isGameStarted == false)
+            {
+                isGameStarted = false;
+                return MoveType.Backward;
+            }
+        }
+
 
         return MoveType.Idle;
     }

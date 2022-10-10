@@ -289,7 +289,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 19, y: 426}
+  m_AnchoredPosition: {x: 19, y: 381}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &39287763
@@ -3393,6 +3393,8 @@ MonoBehaviour:
   BaseBackwardSpeed: 0.05
   MinDistanceToReachPoint: 2
   PlayerPlatformSpeed: 40
+  distPlaceholder: 0
+  distanceText: {fileID: 39287761}
 --- !u!114 &403651013
 MonoBehaviour:
   m_ObjectHideFlags: 0

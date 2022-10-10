@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
 using Fusion.KCC;
+using TMPro;
 
 public enum MoveType
 {
@@ -33,6 +34,7 @@ public class Plug : NetworkBehaviour
     public float PlayerPlatformSpeed = 10;
     private float dist;
     public float distPlaceholder;
+    public GameObject distanceText;
         
   //  [Tooltip("Used for if CollisionExit is not called, check distance instead")]
   //  public float RemoveCollisionMaxDistance = 2;
@@ -52,6 +54,7 @@ public class Plug : NetworkBehaviour
         //Check Distance Between Plug and Goal
         dist = GetDistanceToTarget();
         distPlaceholder = dist;
+        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString(); 
         MovingType = MoveType.Idle;
     }
 
@@ -163,6 +166,7 @@ public class Plug : NetworkBehaviour
         NetworkRigidbody.Rigidbody.MovePosition(nextPos);
         dist--;
         distPlaceholder = dist;
+        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
 
     private void MoveBackward()
@@ -172,6 +176,7 @@ public class Plug : NetworkBehaviour
         NetworkRigidbody.Rigidbody.velocity = velocity;
         dist++;
         distPlaceholder = dist;
+        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
     public void OnPlayerCollisionEnter(KCC collision)
     {
