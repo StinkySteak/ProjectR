@@ -28,6 +28,8 @@ public class Weapon : NetworkBehaviour
 
     public float InAccuracyDecrease;
 
+    public float InAccuracy;
+
     float CurrentInAccuracy;
 
     public float ReloadDuration = 0.8f;
@@ -135,6 +137,8 @@ public class Weapon : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        InAccuracy -=  InAccuracyDecrease * Runner.DeltaTime;
+
         if (CurrentBullet <= 0 && !IsReloading)
             InputReload();
 
@@ -179,45 +183,45 @@ public class Weapon : NetworkBehaviour
     }
     void Fire()
     {
-        var direction = ProjectilePoint.forward;
+        //var direction = ProjectilePoint.forward;
 
-        var nextInAccuracy
+        InAccuracy += InAccuracyIncreasePerShot;
 
-        var x = Random.Range(-InAccuracy, InAccuracy);
-        var y = Random.Range(-InAccuracy, InAccuracy);
-        var z = Random.Range(-InAccuracy, InAccuracy);
+        //var x = Random.Range(-InAccuracy, InAccuracy);
+        //var y = Random.Range(-InAccuracy, InAccuracy);
+        //var z = Random.Range(-InAccuracy, InAccuracy);
 
-        var random = new Vector3(x, y, z);
+        //var random = new Vector3(x, y, z);
 
-        var hitCount = Runner.LagCompensation.RaycastAll(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, Hits, HitMask, true, HitOptions.IncludePhysX);
+        //var hitCount = Runner.LagCompensation.RaycastAll(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, Hits, HitMask, true, HitOptions.IncludePhysX);
 
-        var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
+        //var hitPos = ProjectilePoint.position + ((ProjectilePoint.forward * MaxDistance) + (direction + random * MaxDistance));
 
 
 
-        foreach (var hit in Hits)
-        {
-            hitPos = hit.Point;
+        //foreach (var hit in Hits)
+        //{
+        //    hitPos = hit.Point;
 
-            LastFireData = FireData.Create(true, hitPos);
+        //    LastFireData = FireData.Create(true, hitPos);
 
-            if (!hit.GameObject.CompareTag("Player"))
-                continue;
+        //    if (!hit.GameObject.CompareTag("Player"))
+        //        continue;
 
-            if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
-            {
-                if (health.CanTakeDamageFrom(Object.InputAuthority))
-                {
-                    health.ApplyDamage(BaseDamage, Object.InputAuthority);
-                }
-            }
-        }
+        //    if (hit.GameObject.transform.parent.TryGetComponent(out PlayerHealth health))
+        //    {
+        //        if (health.CanTakeDamageFrom(Object.InputAuthority))
+        //        {
+        //            health.ApplyDamage(BaseDamage, Object.InputAuthority);
+        //        }
+        //    }
+        //}
 
-        if (hitCount <= 0)
-            LastFireData = FireData.Create(false, hitPos);
+        //if (hitCount <= 0)
+        //    LastFireData = FireData.Create(false, hitPos);
 
-        FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
-        CurrentBullet--;
+        //FireTimer = TickTimer.CreateFromSeconds(Runner, FireRate);
+        //CurrentBullet--;
     }
 }
 
