@@ -135,11 +135,9 @@ public class Plug : NetworkBehaviour
         Vector3 current = transform.position;
 
         //Iterate through vPath and find the distance between the nodes
-        for (int i = 0; i < vPath.Count; i++)
+        for (int i = 0; i < vPath.Count - 1; i++)
         {
-            totalDistance += (vPath[i].transform.position - current).magnitude;
-            current = vPath[i].transform.position;
-            Debug.Log("At array " + i + "path position: " + current);
+            totalDistance += Vector3.Distance(vPath[i].position, vPath[i + 1].position);
         }
 
         //minDistToGoal = totalDistance;
@@ -164,7 +162,7 @@ public class Plug : NetworkBehaviour
         LastKinematicVelocity = velocity * PlayerPlatformSpeed;
 
         NetworkRigidbody.Rigidbody.MovePosition(nextPos);
-        dist--;
+        dist -= Time.deltaTime;
         distPlaceholder = dist;
         distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
@@ -174,7 +172,7 @@ public class Plug : NetworkBehaviour
         var velocity = Vector3.zero * BaseBackwardSpeed;
 
         NetworkRigidbody.Rigidbody.velocity = velocity;
-        dist++;
+        dist += Time.deltaTime;
         distPlaceholder = dist;
         distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
