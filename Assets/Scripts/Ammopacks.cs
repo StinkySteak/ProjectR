@@ -5,7 +5,7 @@ using Fusion;
 
 public class Ammopacks : NetworkBehaviour
 {
-    public int AmmoAmount = 60;
+    public int Magazine = 3;
 
 
     private void OnTriggerStay(Collider other)
@@ -25,7 +25,7 @@ public class Ammopacks : NetworkBehaviour
 
     void OnCollect(PlayerCollect playerCollect)
     {
-        playerCollect.OnAmmopackCollected(60);
+        playerCollect.OnAmmopackCollected(Magazine);
 
         Runner.Despawn(Object);
     }

@@ -20,6 +20,8 @@ public class PropertyManager : SceneSingleton<PropertyManager>
 
         InGameHUD.Instance.DespawnedPanel.SetActive(!_isSpawned);
         InGameHUD.Instance.SpawnedPanel.SetActive(_isSpawned);
+
+        InGameHUD.Instance.UniversalPanel.SetActive(true);
     }
 
     public void SpawnPlayer()
@@ -29,5 +31,21 @@ public class PropertyManager : SceneSingleton<PropertyManager>
     public void SetWeapon(int _index)
     {
         SelectedPrimaryWeaponIndex = _index;
+    }
+    public void OnGameEnd(bool _won)
+    {
+        InGameHUD.Instance.EndGamePanel.SetActive(true);
+        InGameHUD.Instance.EndGameText.text = _won ? "VICTORY" : "DEFEAT";
+
+        StartCoroutine(Shutdown());
+    }
+    IEnumerator Shutdown()
+    {
+        yield return new WaitForSeconds(6);
+        RunnerInstance.NetworkRunner.Shutdown();
+    }
+    public void ExitGame()
+    {
+        RunnerInstance.NetworkRunner.Shutdown();
     }
 }

@@ -256,7 +256,7 @@ public class Weapon : NetworkBehaviour
 
         var random = new Vector3(x, y, z);
 
-        if (Runner.LagCompensation.Raycast(ProjectilePoint.position, direction + random, MaxDistance, player: Object.InputAuthority, out var hit, HitMask, HitOptions.SubtickAccuracy))
+        if (Runner.LagCompensation.Raycast(ProjectilePoint.position, direction + random, MaxDistance, Object.InputAuthority, out var hit, HitMask, HitOptions.IncludePhysX))
         {
             LastFireData = FireData.Create(true, hit.Point);
 
@@ -279,7 +279,7 @@ public class Weapon : NetworkBehaviour
 
         CurrentBullet--;
 
-        
+
 
         LastShotTick = Runner.Simulation.Tick;
 

@@ -4,6 +4,7 @@ using UnityEngine;
 using Fusion;
 using Fusion.Sockets;
 using System;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Class to manage Fusion Session (Start Game Session, Callbacks)
@@ -15,21 +16,26 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     public static event Action OnRunnerStart;
     public static event Action OnRunnerStartFailed;
 
-    public void InitializeClient()
+    public static event Action<List<SessionInfo>> OnSessionListUpdated;
+
+    void Start()
     {
-        Runner.AddCallbacks(this);
-        Runner.AddCallbacks(CallbackManager.Instance);
+        InitializeClient();
     }
 
-    public void StartAuto()
+    async void InitializeClient()
     {
-        StartSimulation("session", GameMode.AutoHostOrClient);
+        if (!RunnerInstance.FreshRunner.LobbyInfo.IsValid)
+            await RunnerInstance.NetworkRunner.JoinSessionLobby(SessionLobby.ClientServer);
+
+        Runner.AddCallbacks(this);
+        Runner.AddCallbacks(CallbackManager.Instance);
     }
 
     /// <summary>
     /// Call this to start any game (client/Host)
     /// </summary>
-    public async void StartSimulation(string _sessionName, GameMode _gamemode)
+    public async void StartSimulation(string _sessionName, GameMode _gamemode, string _region = "")
     {
         if (Runner.IsRunning)
             return;
@@ -40,14 +46,20 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
         {
             SessionName = _sessionName,
             GameMode = _gamemode,
-            PlayerCount = 16,
+            PlayerCount = 6,
             Scene = 0,
             SceneManager = GetComponent<NetworkSceneManagerDefault>(),
-            Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); }
+            Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); },
+            SessionProperties = new Dictionary<string, SessionProperty>() { ["region"] = _region }
         });
 
         if (!result.Ok)
             OnRunnerStartFailed?.Invoke();
+    }
+    void OnShutdown()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        InitializeClient();
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
@@ -117,12 +129,12 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
 
     void INetworkRunnerCallbacks.OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
-
+        OnSessionListUpdated?.Invoke(sessionList);
     }
 
     void INetworkRunnerCallbacks.OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-
+        OnShutdown();
     }
 
     void INetworkRunnerCallbacks.OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)

@@ -16,8 +16,8 @@ public class PlayerCollect : NetworkBehaviour
     {
         PlayerSetup.PlayerHealth.AddHealth(_healAmount);
     }
-    public void OnAmmopackCollected(int _ammoAmount)
+    public void OnAmmopackCollected(int _magAmount)
     {
-        PlayerSetup.WeaponManager.AddAmmo(_ammoAmount);
+        PlayerSetup.WeaponManager.AddAmmo(_magAmount);
     }
 }

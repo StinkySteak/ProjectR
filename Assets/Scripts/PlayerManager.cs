@@ -12,6 +12,25 @@ public class PlayerManager : Singleton<PlayerManager>
 
     public Dictionary<PlayerRef, PlayerSetup> SpawnedPlayerObjects { get; set; } = new(); //PlayerSetup.cs hasnt been made
 
+    public void GetTeamMember(out int _ispTeam, out int _hackerTeam)
+    {
+        _ispTeam = 0;
+        _hackerTeam = 0;
+
+        foreach (var player in SpawnedPlayers)
+        {
+            if (player.Value.Team == Team.Invalid)
+                continue;
+
+            if (player.Value.Team == Team.ISP)
+                _ispTeam++;
+
+            if (player.Value.Team == Team.Hacker)
+                _hackerTeam++;
+
+        }
+    }
+
     /// <summary>
     /// method is called by Player.cs when Spawned OR Despawned
     /// </summary>

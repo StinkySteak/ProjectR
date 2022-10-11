@@ -17,7 +17,7 @@ public class Player : NetworkBehaviour
     [Networked, HideInInspector] public string Nickname { get; set; }
     [Networked, HideInInspector] public int Kill { get; set; }
     [Networked, HideInInspector] public int Death { get; set; }
-    [Networked, HideInInspector] public Team Team { get; set; }
+    [Networked, HideInInspector] public Team Team { get; set; } = Team.Invalid;
 
     /// <summary>
     /// made for triggering PropertyManager
@@ -67,7 +67,7 @@ public class Player : NetworkBehaviour
     void RPC_SetupPlayer(string _nickname, Team _team)
     {
         Nickname = _nickname;
-        Team = _team;
+      //  Team = _team;
 
         IsInitialized = true;
     }

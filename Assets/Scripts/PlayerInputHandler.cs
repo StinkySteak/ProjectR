@@ -113,6 +113,9 @@ public class PlayerInputHandler : NetworkBehaviour, IBeforeUpdate, IBeforeTick, 
     }
     private void ProcessStandaloneInput()
     {
+        if (InGameHUD.Instance.OnPauseMenu)
+            return;
+
         Vector2 moveDirection = Vector2.zero;
         Vector2 lookRotationDelta = new(-Input.GetAxisRaw("Mouse Y"), Input.GetAxisRaw("Mouse X"));
 

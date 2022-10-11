@@ -75,7 +75,8 @@ public class PlayerSetup : NetworkBehaviour
         foreach (var visual in LocalVisual)
             visual.SetActive(hasInputAuth);
 
-        ManageColliders();
+        if (LevelManager.Instance.GameStatus.State == State.Running)
+            ManageColliders();
     }
     /// <summary>
     /// used for players to go pass through barriers

@@ -4,7 +4,6 @@ using UnityEngine;
 using Fusion;
 using Fusion.Sockets;
 using System;
-using Random = UnityEngine.Random;
 
 /// <summary>
 /// Class for game loop, mechanics
@@ -13,6 +12,9 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
     public int RequiredPlayerToStart = 2;
     public float PreparationTime = 20;
+    public float InitialDefendingDuration; // hacker defend duration
+
+    [Networked, HideInInspector] public float DefendingDuration { get; set; }
 
 
     [Serializable]
@@ -34,7 +36,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
                     return adv;
             }
 
-            Debug.LogError("No Team Found");
+            Debug.LogError("No Team Found: " + _team);
             return null;
         }
     }
@@ -63,6 +65,35 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     public static event Action OnRender;
 
+    [Networked(OnChanged = nameof(OnGameStateChanged)), HideInInspector] public GameStatus GameStatus { get; set; }
+
+
+
+    public override void Spawned()
+    {
+        if (Object.HasStateAuthority)
+        {
+            DefendingDuration = InitialDefendingDuration;
+        }
+    }
+
+    static void OnGameStateChanged(Changed<LevelManager> changed)
+    {
+        changed.Behaviour.UpdateGame();
+    }
+
+    void UpdateGame()
+    {
+        if (GameStatus.State == State.Running)
+        {
+            foreach (var player in PlayerManager.Instance.SpawnedPlayerObjects)
+                player.Value.ManageColliders();
+        }
+
+        if (GameStatus.State == State.End)
+            PropertyManager.Instance.OnGameEnd(GameStatus.WinningTeam == Player.LocalPlayer.Team);
+    }
+
     static void OnAdvanceChanged(Changed<LevelManager> changed)
     {
         changed.Behaviour.UpdateAdvanceProperties();
@@ -79,6 +110,40 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnPointReached()
     {
         Advance++;
+        DefendingDuration += InitialDefendingDuration;
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (GameStatus.State == State.Waiting)
+        {
+            if (PlayerManager.Instance.SpawnedPlayers.Count >= RequiredPlayerToStart)
+                StartGame();
+        }
+        else if (GameStatus.State == State.Running)
+        {
+            DefendingDuration -= Runner.DeltaTime;
+
+            if (DefendingDuration <= 0)
+            {
+                if (Cart.Instance.IsContested)
+                    return; // do not end the game yet, while player is still on the cart
+
+                EndGame(Team.Hacker);
+            }
+        }
+    }
+    public void StartGame()
+    {
+        GameStatus = new GameStatus() { State = State.Running, WinningTeam = Team.Invalid };
+    }
+
+    public void EndGame(Team _winningTeam)
+    {
+        GameStatus = new GameStatus() { State = State.End, WinningTeam = _winningTeam };
     }
 
     void UpdateAdvanceProperties()
@@ -152,14 +217,31 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
 
-        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref);
+        Runner.Spawn(PlayerDataPrefab, Vector3.zero, Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => InitPlayer(obj));
+
+        void InitPlayer(NetworkObject obj)
+        {
+            if (obj.TryGetComponent(out Player player))
+            {
+                PlayerManager.Instance.GetTeamMember(out int ispTeam, out int _hackerTeam);
+
+                var expectedTeam = Team.Invalid;
+
+                if (ispTeam > _hackerTeam)
+                    expectedTeam = Team.Hacker;
+                else
+                    expectedTeam = Team.ISP;
+
+                player.Team = expectedTeam;
+            }
+        }
     }
     public void SpawnPlayerController(PlayerRef _ref, int _selectedPrimaryWeapon)
     {
         if (!RunnerInstance.NetworkRunner.IsServer)
             return;
 
-        if(PlayerManager.Instance.TryGetPlayerTeam(_ref, out var team))
+        if (PlayerManager.Instance.TryGetPlayerTeam(_ref, out var team))
         {
             Runner.Spawn(PlayerPrefab, GetSpawnPos(team), Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
         }
@@ -271,7 +353,18 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
 public enum Team
 {
+    Invalid,
     ISP,
-    Hacker,
-    Invalid
+    Hacker
+}
+public enum State
+{
+    Waiting,
+    Running,
+    End
+}
+public struct GameStatus : INetworkStruct
+{
+    public State State;
+    public Team WinningTeam;
 }

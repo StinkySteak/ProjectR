@@ -112,9 +112,9 @@ public class PlayerWeaponManager : NetworkBehaviour
         SetWeapon();
     }
 
-    public void AddAmmo(int _amount)
+    public void AddAmmo(int _magAmount)
     {
-        ActiveWeapon.TotalAmmo += _amount;
+        ActiveWeapon.TotalAmmo += ActiveWeapon.BulletPerMagazine * _magAmount;
     }
 
 

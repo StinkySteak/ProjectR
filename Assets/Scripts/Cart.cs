@@ -9,6 +9,13 @@ using UnityEngine.UIElements;
 /// </summary>
 public class Cart : NetworkBehaviour
 {
+    public static Cart Instance;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     Plug Plug;
 
     public List<PlayerRef> ClosePlayers = new();
@@ -67,7 +74,7 @@ public class Cart : NetworkBehaviour
 
         if (!StartMovingBackwardTime.IsTrueRunning())
         {
-            if(isGameStarted == false)
+            if (isGameStarted == false)
             {
                 isGameStarted = false;
                 return MoveType.Backward;
@@ -104,9 +111,9 @@ public class Cart : NetworkBehaviour
 
             ClosePlayers.Add(playerRef);
 
-            if (PlayerManager.Instance.TryGetPlayerTeam(playerRef,out Team _team))
+            if (PlayerManager.Instance.TryGetPlayerTeam(playerRef, out Team _team))
             {
-                if(_team == Team.ISP)
+                if (_team == Team.ISP)
                 {
                     ISPAmount++;
                     IsPushing = true;
@@ -129,15 +136,22 @@ public class Cart : NetworkBehaviour
     }
     void SetContestion()
     {
+        bool isThereISP = false;
+
         foreach (var player in ClosePlayers)
         {
             if (PlayerManager.Instance.TryGetPlayerTeam(player, out var team)) // there is a hacker, set it as contestd
             {
-                if (team != Team.Hacker)
+                if (team == Team.ISP)
+                {
+                    isThereISP = true;
+                    continue;
+                }
+                if (isThereISP && team == Team.Hacker) // if hacker & there is ISP
+                {
+                    IsContested = true;
                     return;
-
-                IsContested = true;
-                return;
+                }
             }
         }
     }

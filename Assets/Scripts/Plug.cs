@@ -18,13 +18,19 @@ public enum MoveType
 /// 
 public class Plug : NetworkBehaviour
 {
-    public List<KCC> KCCOnTop;
+    public static Plug Instance { get; set; }
+
+    readonly List<KCC> KCCOnTop = new();
+    readonly List<KCC> LeavingKCC = new();
+
+    public List<Transform> Waypoints;
 
     public NetworkRigidbody NetworkRigidbody;
 
-    [SerializeField] private PathingConfig path;
-    List<Transform> Waypoints;
-    private int LastWaypointCount;
+    bool LastTargetReached => LastWaypointCount >= Waypoints.Count - 1;
+
+
+    [Networked, HideInInspector] private int LastWaypointCount { get; set; }
 
     public float BaseForwardSpeed;
     public float BaseBackwardSpeed;
@@ -32,14 +38,18 @@ public class Plug : NetworkBehaviour
     public float MinDistanceToReachPoint = 2;
 
     public float PlayerPlatformSpeed = 10;
-    private float dist;
-    public float distPlaceholder;
-    public GameObject distanceText;
-        
-  //  [Tooltip("Used for if CollisionExit is not called, check distance instead")]
-  //  public float RemoveCollisionMaxDistance = 2;
 
-    List<KCC> LeavingKCC = new();
+    public bool TryGetDistance(out float distance)
+    {
+        if (LastTargetReached) // no more target available
+        {
+            distance = -1;
+            return false;
+        }
+
+        distance = Vector3.Distance(transform.position, Waypoints[LastWaypointCount + 1].position);
+        return true;
+    }
 
     MoveType MovingType { get; set; }
     int PushingPlayer { get; set; }
@@ -49,12 +59,7 @@ public class Plug : NetworkBehaviour
 
     private void Awake()
     {
-        Waypoints = path.GetPathPoints();
-
-        //Check Distance Between Plug and Goal
-        dist = GetDistanceToTarget();
-        distPlaceholder = dist;
-        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString(); 
+        Instance = this;
         MovingType = MoveType.Idle;
     }
 
@@ -83,7 +88,7 @@ public class Plug : NetworkBehaviour
         {
             case MoveType.Idle:
                 NetworkRigidbody.Rigidbody.velocity = default;
-                
+
                 break;
             case MoveType.Forward:
                 MoveForward();
@@ -104,9 +109,7 @@ public class Plug : NetworkBehaviour
             if (kcc.transform.position.y < transform.position.y)
                 LeavingKCC.Add(kcc);
 
-          //  print($"KCCOnTop: {KCCOnTop.Count} LastKinematicVelocity: {LastKinematicVelocity}");
             kcc.SetExternalVelocity(LastKinematicVelocity);
-         //   print(kcc.FixedData.DynamicVelocity);
         }
 
         foreach (var kcc in LeavingKCC)
@@ -121,40 +124,28 @@ public class Plug : NetworkBehaviour
     {
         float dist = Vector3.Distance(transform.position, Waypoints[LastWaypointCount + 1].position);
 
-        if (dist <= 2)
-        {
+        if (dist <= MinDistanceToReachPoint)
             OnPointReached();
-        }
-    }
-
-    public float GetDistanceToTarget()
-    {
-        List<Transform> vPath = Waypoints;
-        float totalDistance = 0;
-
-        Vector3 current = transform.position;
-
-        //Iterate through vPath and find the distance between the nodes
-        for (int i = 0; i < vPath.Count; i++)
-        {
-            totalDistance += (vPath[i].transform.position - current).magnitude;
-            current = vPath[i].transform.position;
-            Debug.Log("At array " + i + "path position: " + current);
-        }
-
-        //minDistToGoal = totalDistance;
-        return totalDistance;
     }
 
     void OnPointReached()
     {
-        print("OnPointReached!");
-        LevelManager.Instance.OnPointReached();
         LastWaypointCount++;
+
+        if (LastTargetReached)
+        {
+            LevelManager.Instance.EndGame(Team.ISP);
+            return;
+        }
+
+        LevelManager.Instance.OnPointReached();
     }
 
     private void MoveForward()
     {
+        if(LastWaypointCount >= Waypoints.Count - 1)
+            return;
+
         var direction = Waypoints[LastWaypointCount + 1].position - transform.position;
 
         var velocity = direction.normalized * GetForwardSpeed();
@@ -164,9 +155,6 @@ public class Plug : NetworkBehaviour
         LastKinematicVelocity = velocity * PlayerPlatformSpeed;
 
         NetworkRigidbody.Rigidbody.MovePosition(nextPos);
-        dist--;
-        distPlaceholder = dist;
-        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
 
     private void MoveBackward()
@@ -174,9 +162,6 @@ public class Plug : NetworkBehaviour
         var velocity = Vector3.zero * BaseBackwardSpeed;
 
         NetworkRigidbody.Rigidbody.velocity = velocity;
-        dist++;
-        distPlaceholder = dist;
-        distanceText.GetComponent<TextMeshProUGUI>().text = distPlaceholder.ToString();
     }
     public void OnPlayerCollisionEnter(KCC collision)
     {

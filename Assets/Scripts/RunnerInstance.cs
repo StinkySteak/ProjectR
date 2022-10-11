@@ -13,11 +13,27 @@ public class RunnerInstance : Singleton<RunnerInstance>
     /// Main Active Runner
     /// </summary>
     public static NetworkRunner NetworkRunner => Instance.GetRunner();
+    public static NetworkRunner FreshRunner => Instance.GetFreshRunner();
     static NetworkRunner Runner { get; set; }
+
+    /// <summary>
+    /// ONLY USE THIS FOR JOINING SESSION LOBBY
+    /// </summary>
+    /// <returns></returns>
+    NetworkRunner GetFreshRunner()
+    {
+        Destroy(Runner);
+
+        Runner = transform.AddComponent<NetworkRunner>();
+
+        print(Runner == null);
+
+        return Runner;
+    }
 
     NetworkRunner GetRunner()
     {
-        if (Runner == null)
+        if (!TryGetComponent(out NetworkRunner runner))
         {
             Runner = gameObject.AddComponent<NetworkRunner>();
         }
