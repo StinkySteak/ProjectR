@@ -24,8 +24,8 @@ public class MainMenu : MonoBehaviour
 
     private void Start()
     {
-        PhotonService.OnRunnerStart += () => { Root.SetActive(false); };
-        PhotonService.OnRunnerStartFailed += () => { Root.SetActive(true); };
+        PhotonService.OnRunnerStart += SetRootDisable;
+        PhotonService.OnRunnerStartFailed += SetRootActive;
         PhotonService.OnSessionListUpdated += UpdateSessionListing;
 
         List<TMP_Dropdown.OptionData> options = new()
@@ -39,7 +39,20 @@ public class MainMenu : MonoBehaviour
         RegionDropdown.ClearOptions();
         RegionDropdown.AddOptions(options);
     }
-
+    private void OnDestroy()
+    {
+        PhotonService.OnRunnerStart -= SetRootDisable;
+        PhotonService.OnRunnerStartFailed -= SetRootActive;
+        PhotonService.OnSessionListUpdated -= UpdateSessionListing;
+    }
+    void SetRootDisable()
+    {
+        Root.SetActive(false);
+    }
+    void SetRootActive()
+    {
+        Root.SetActive(true);
+    }
     string GetRegionName(int _value)
     {
         switch (_value)

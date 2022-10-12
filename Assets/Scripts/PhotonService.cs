@@ -5,6 +5,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using UnityEngine.SceneManagement;
+using System.Threading;
 
 /// <summary>
 /// Class to manage Fusion Session (Start Game Session, Callbacks)
@@ -20,13 +21,20 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
 
     void Start()
     {
-        InitializeClient();
+        JoinLobby();
     }
 
-    async void InitializeClient()
+    void JoinLobby()
     {
+        StartCoroutine(InitializeClient());
+    }
+
+    IEnumerator InitializeClient()
+    {
+        yield return new WaitForSeconds(2);
+
         if (!RunnerInstance.FreshRunner.LobbyInfo.IsValid)
-            await RunnerInstance.NetworkRunner.JoinSessionLobby(SessionLobby.ClientServer);
+            RunnerInstance.NetworkRunner.JoinSessionLobby(SessionLobby.ClientServer);
 
         Runner.AddCallbacks(this);
         Runner.AddCallbacks(CallbackManager.Instance);
@@ -59,7 +67,7 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     void OnShutdown()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        InitializeClient();
+        JoinLobby();
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)

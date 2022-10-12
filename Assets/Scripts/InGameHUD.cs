@@ -41,6 +41,11 @@ public class InGameHUD : SceneSingleton<InGameHUD>
         LevelManager.OnRender += OnRender;
     }
 
+    private void OnDestroy()
+    {
+        LevelManager.OnRender -= OnRender;
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))

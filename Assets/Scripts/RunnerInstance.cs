@@ -24,9 +24,14 @@ public class RunnerInstance : Singleton<RunnerInstance>
     {
         Destroy(Runner);
 
-        Runner = transform.AddComponent<NetworkRunner>();
+        print("1. " + Runner == null);
 
-        print(Runner == null);
+        if (!transform.TryGetComponent(out NetworkRunner runner))
+        {
+            Runner = gameObject.AddComponent<NetworkRunner>();
+        }
+
+        print("2." + Runner == null);
 
         return Runner;
     }
