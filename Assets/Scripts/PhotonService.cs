@@ -33,7 +33,7 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     {
         yield return new WaitForSeconds(2);
 
-        if (!RunnerInstance.FreshRunner.LobbyInfo.IsValid)
+        if (!RunnerInstance.GetSafeInstance.InstanceFreshRunner.LobbyInfo.IsValid)
             RunnerInstance.NetworkRunner.JoinSessionLobby(SessionLobby.ClientServer);
 
         Runner.AddCallbacks(this);
@@ -58,7 +58,8 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
             Scene = 0,
             SceneManager = GetComponent<NetworkSceneManagerDefault>(),
             Initialized = (NetworkRunner runner) => { Runner.AddCallbacks(LevelManager.Instance); },
-            SessionProperties = new Dictionary<string, SessionProperty>() { ["region"] = _region }
+            SessionProperties = new Dictionary<string, SessionProperty>() { ["region"] = _region },
+            DisableClientSessionCreation = true
         });
 
         if (!result.Ok)
@@ -67,7 +68,6 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     void OnShutdown()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        JoinLobby();
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
@@ -148,5 +148,9 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     void INetworkRunnerCallbacks.OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)
     {
 
+    }
+    public void Exit()
+    {
+        Application.Quit(0);
     }
 }

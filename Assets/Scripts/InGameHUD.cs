@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,12 +15,16 @@ public class InGameHUD : SceneSingleton<InGameHUD>
     public GameObject UniversalPanel;
     public GameObject EndGamePanel;
 
-    [SerializeField] private Slider slider;
+    [SerializeField] private TMP_Text HealthText;
     [SerializeField] private TMP_Text AmmoText;
     [SerializeField] private Image CrosshairOuterCircle;
     [SerializeField] private TMP_Text CartDistanceText;
     [SerializeField] private TMP_Text ContestedText;
     [SerializeField] private TMP_Text TimeRemainingText;
+    [SerializeField] private GameObject WaitingText;
+
+    [SerializeField] private TMP_Text ISPScoreboard;
+    [SerializeField] private TMP_Text HackerScoreboard;
 
     [Header("EndGame")]
     public TMP_Text EndGameText;
@@ -39,6 +44,33 @@ public class InGameHUD : SceneSingleton<InGameHUD>
         base.Awake();
 
         LevelManager.OnRender += OnRender;
+    }
+
+    void GenerateScoreboard()
+    {
+        StringBuilder hackerText = new();
+        StringBuilder ispText = new();
+
+        foreach (var player in PlayerManager.Instance.SpawnedPlayers.Values)
+        {
+            if (!player.IsInitialized)
+                continue;
+
+            int count = 1;
+
+            if(player.Team == Team.ISP)
+            {
+                ispText.AppendLine($"{count++}. {player.Nickname}: {player.Kill}/{player.Death}");
+            }
+
+            if(player.Team == Team.Hacker)
+            {
+                hackerText.AppendLine($"{count++}. {player.Nickname}: {player.Kill}/{player.Death}");
+            }
+        }
+
+        ISPScoreboard.text = ispText.ToString();
+        HackerScoreboard.text = hackerText.ToString();
     }
 
     private void OnDestroy()
@@ -68,6 +100,12 @@ public class InGameHUD : SceneSingleton<InGameHUD>
         UpdateWeapon();
         UpdateCartDistance();
         UpdateTimer();
+        UpdateOther();
+        GenerateScoreboard();
+    }
+    void UpdateOther()
+    {
+        WaitingText.SetActive(LevelManager.Instance.GameStatus.State == State.Waiting);
     }
     void UpdateTimer()
     {
@@ -78,8 +116,7 @@ public class InGameHUD : SceneSingleton<InGameHUD>
         if (PlayerHealth.LocalPlayer == null || PlayerHealth.LocalPlayer.Object == null || !PlayerHealth.LocalPlayer.Object.IsValid)
             return;
 
-        slider.maxValue = PlayerHealth.LocalPlayer.MaxHealth;
-        slider.value = PlayerHealth.LocalPlayer.Health;
+        HealthText.text = PlayerHealth.LocalPlayer.Health.ToString();
     }
     /// <summary>
     /// Update Ammo & Crosshair

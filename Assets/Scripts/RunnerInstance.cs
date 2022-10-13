@@ -7,31 +7,41 @@ using Unity.VisualScripting;
 /// <summary>
 /// Used for to prevent NULL runner & re-establish new runner
 /// </summary>
-public class RunnerInstance : Singleton<RunnerInstance>
+public class RunnerInstance : SceneSingleton<RunnerInstance>
 {
     /// <summary>
     /// Main Active Runner
     /// </summary>
     public static NetworkRunner NetworkRunner => Instance.GetRunner();
-    public static NetworkRunner FreshRunner => Instance.GetFreshRunner();
-    static NetworkRunner Runner { get; set; }
-
     /// <summary>
     /// ONLY USE THIS FOR JOINING SESSION LOBBY
     /// </summary>
     /// <returns></returns>
+    public static NetworkRunner FreshRunner => Instance.GetFreshRunner();
+    public NetworkRunner InstanceFreshRunner => GetFreshRunner();
+    static NetworkRunner Runner { get; set; }
+    public static RunnerInstance GetSafeInstance => SafeInstance();
+    static RunnerInstance SafeInstance()
+    {
+        if (Instance == null)
+        {
+            var go = new GameObject("Runner Instance");
+
+            Instance = go.AddComponent<RunnerInstance>();
+        }
+
+        return Instance;
+    }
+
+
     NetworkRunner GetFreshRunner()
     {
         Destroy(Runner);
-
-        print("1. " + Runner == null);
 
         if (!transform.TryGetComponent(out NetworkRunner runner))
         {
             Runner = gameObject.AddComponent<NetworkRunner>();
         }
-
-        print("2." + Runner == null);
 
         return Runner;
     }

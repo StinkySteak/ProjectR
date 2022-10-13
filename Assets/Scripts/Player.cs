@@ -87,7 +87,22 @@ public class Player : NetworkBehaviour
             LevelManager.Instance.SpawnPlayerController(_ref, _selectedPrimaryWeapon);
         }
     }
-
+    public void RequestDespawn()
+    {
+        RPC_RequestDespawn();
+    }
+    public void Despawn()
+    {
+        if (PlayerManager.Instance.TryGetPlayerObj(Object.InputAuthority, out var player))
+        {
+            LevelManager.Instance.OnPlayerDespawned(player.Object);
+        }
+    }
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    void RPC_RequestDespawn()
+    {
+        Despawn();
+    }
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (hasState)

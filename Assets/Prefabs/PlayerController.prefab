@@ -10449,14 +10449,14 @@ MonoBehaviour:
   ReloadDuration: 1
   _IsReloading: 0
   AudioClip: {fileID: 8300000, guid: 60455c0a08a20b4458cd4a07f6db82f2, type: 3}
-  IncreasePitchPerShot: 0
-  PitchDecreasePerTick: 0
+  IncreasePitchPerShot: 0.06
+  PitchDecreasePerTick: 1
   HitMask:
     serializedVersion: 2
     m_Bits: 2147483647
   ProjectilePoint: {fileID: 170862966990993724}
   BulletTracerPoint: {fileID: 5285221083575165130}
-  MaxDistance: 50
+  MaxDistance: 100
 --- !u!1 &5026190063787428198
 GameObject:
   m_ObjectHideFlags: 0
@@ -16543,6 +16543,11 @@ MonoBehaviour:
   BloodFx: {fileID: 4042685619195046591}
   _Health: 0
   MaxHealth: 100
+  OnDamagedSfx:
+  - {fileID: 8300000, guid: 577ee4116914c0f46abfb421b2907983, type: 3}
+  - {fileID: 8300000, guid: 2f957b1bd8344e64d918d8aae05a5743, type: 3}
+  - {fileID: 8300000, guid: 1b81dfc858f19834b88531c5a2bc8a60, type: 3}
+  - {fileID: 8300000, guid: 8dbd9d772f39a3c419d2e4fbf66af9a0, type: 3}
 --- !u!114 &5016579273843455300
 MonoBehaviour:
   m_ObjectHideFlags: 0

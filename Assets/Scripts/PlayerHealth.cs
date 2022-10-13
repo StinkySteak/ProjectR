@@ -5,6 +5,7 @@ using Fusion;
 
 public class PlayerHealth : NetworkBehaviour
 {
+    PlayerSetup PlayerSetup;
     public static PlayerHealth LocalPlayer;
 
     public ParticleSystem BloodFx;
@@ -12,6 +13,9 @@ public class PlayerHealth : NetworkBehaviour
     [Networked(OnChanged = nameof(OnHealthChanged)), HideInInspector] public int Health { get; set; }
     public int MaxHealth = 100;
     private HealthBarUI healthBarUI;
+
+    public AudioClip[] OnDamagedSfx;
+    AudioClip GetRandomDamageSfx => OnDamagedSfx[Random.Range(0, OnDamagedSfx.Length - 1)];
 
     static void OnHealthChanged(Changed<PlayerHealth> changed)
     {
@@ -24,9 +28,19 @@ public class PlayerHealth : NetworkBehaviour
         if (newHealth < oldHealth)
         {
             //play fx
+            changed.Behaviour.PlayerSetup.AudioSource.PlayOneShot(changed.Behaviour.GetRandomDamageSfx);
             changed.Behaviour.BloodFx.Play();
         }
     }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (PlayerSetup == null)
+            return;
+
+        PlayerSetup.AudioSource.PlayOneShot(GetRandomDamageSfx);
+    }
+
 
     public Team GetTeam()
     {
@@ -40,6 +54,8 @@ public class PlayerHealth : NetworkBehaviour
 
     public override void Spawned()
     {
+        PlayerSetup = GetComponent<PlayerSetup>();
+
         if (Object.HasStateAuthority)
             Health = MaxHealth;
 
@@ -72,6 +88,9 @@ public class PlayerHealth : NetworkBehaviour
 
         if (Health <= 0)
         {
+            if (PlayerManager.Instance.TryGetPlayer(_attacker, out var player))
+                player.Kill++;
+
             LevelManager.Instance.OnPlayerDespawned(Object);
         }
     }

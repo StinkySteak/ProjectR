@@ -9,6 +9,21 @@ public class PropertyManager : SceneSingleton<PropertyManager>
 
     public int SelectedPrimaryWeaponIndex;
 
+    private void Start()
+    {
+        LevelManager.OnSpawned += OnGameJoin;
+    }
+
+    private void OnDestroy()
+    {
+        LevelManager.OnSpawned -= OnGameJoin;
+    }
+
+    void OnGameJoin()
+    {
+        MainMusic.Instance.StartPlay();
+    }
+
     /// <summary>
     /// update property in the scene, such as UI, visual
     /// </summary>
@@ -27,6 +42,10 @@ public class PropertyManager : SceneSingleton<PropertyManager>
     public void SpawnPlayer()
     {
         Player.LocalPlayer.RequestRespawn();
+    }
+    public void Suicide()
+    {
+        Player.LocalPlayer.RequestDespawn();
     }
     public void SetWeapon(int _index)
     {

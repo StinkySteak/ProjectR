@@ -67,7 +67,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     [Networked(OnChanged = nameof(OnGameStateChanged)), HideInInspector] public GameStatus GameStatus { get; set; }
 
-
+    public static event Action OnSpawned;
 
     public override void Spawned()
     {
@@ -75,6 +75,8 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         {
             DefendingDuration = InitialDefendingDuration;
         }
+
+        OnSpawned?.Invoke();
     }
 
     static void OnGameStateChanged(Changed<LevelManager> changed)
@@ -84,12 +86,6 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     void UpdateGame()
     {
-        if (GameStatus.State == State.Running)
-        {
-            foreach (var player in PlayerManager.Instance.SpawnedPlayerObjects)
-                player.Value.ManageColliders();
-        }
-
         if (GameStatus.State == State.End)
             PropertyManager.Instance.OnGameEnd(GameStatus.WinningTeam == Player.LocalPlayer.Team);
     }
@@ -139,6 +135,11 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
     public void StartGame()
     {
         GameStatus = new GameStatus() { State = State.Running, WinningTeam = Team.Invalid };
+
+        foreach (var player in PlayerManager.Instance.SpawnedPlayers.Values)
+        {
+            player.Despawn();
+        }
     }
 
     public void EndGame(Team _winningTeam)
@@ -190,6 +191,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         if (PlayerManager.Instance.TryGetPlayer(obj.InputAuthority, out var player))
         {
             player.State = PlayerState.Despawned;
+            player.Death++;
 
             Runner.Despawn(obj);
         }
@@ -207,7 +209,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         if (PlayerManager.Instance.TryGetPlayer(_ref, out var _player))
         {
-            Runner.Despawn(player.Object);
+            Runner.Despawn(_player.Object);
         }
     }
 

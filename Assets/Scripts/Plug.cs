@@ -82,6 +82,9 @@ public class Plug : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
+        if (LevelManager.Instance.GameStatus.State == State.End)
+            return;
+
         LastKinematicVelocity = default;
 
         switch (MovingType)
@@ -116,12 +119,13 @@ public class Plug : NetworkBehaviour
         {
             KCCOnTop.Remove(kcc);
         }
-
-
     }
 
     void CheckIfDistanceIsReached()
     {
+        if (LastTargetReached)
+            return;
+
         float dist = Vector3.Distance(transform.position, Waypoints[LastWaypointCount + 1].position);
 
         if (dist <= MinDistanceToReachPoint)

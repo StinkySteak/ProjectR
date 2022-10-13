@@ -83,13 +83,21 @@ public class PlayerSetup : NetworkBehaviour
     /// </summary>
     public void ManageColliders()
     {
-        foreach (var adv in LevelManager.Instance.Advancements)
-        {
-            var col = adv.GetMyTeamAdvance(PlayerData.Team).SpawnBarrier.Collider;
-            KCC.SetIgnoreCollider(col, true);
-            //   print($"Disabling collider : {col}");
-        }
+        if (MainCollider == null)
+            return;
 
         MainCollider.tag = "Player";
+
+    //    while(KCC.Data.Ignores.All.Count <= 0)
+     //   {
+            foreach (var adv in LevelManager.Instance.Advancements)
+            {
+                var col = adv.GetMyTeamAdvance(PlayerData.Team).SpawnBarrier.Collider;
+                KCC.SetIgnoreCollider(col, true);
+               
+            }
+      //  }
+
+        print($"Disabling collider : {KCC.Data.Ignores.All.Count}");
     }
 }
