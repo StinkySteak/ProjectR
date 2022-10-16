@@ -51,6 +51,11 @@ public class PropertyManager : SceneSingleton<PropertyManager>
         InGameHUD.Instance.EndGamePanel.SetActive(true);
         InGameHUD.Instance.EndGameText.text = _won ? "VICTORY" : "DEFEAT";
 
+        if (Player.LocalPlayer.Team == Team.ISP)
+            InGameHUD.Instance.EndGameTextDesc.text = _won ? "Internet connected successfuly!\n +10% Salary!" : "Connection terminated\n boss will mad at you!";
+        else if (Player.LocalPlayer.Team == Team.Hacker)
+            InGameHUD.Instance.EndGameTextDesc.text = _won ? "Connection Terminated successfuly!\n +1 Fiverr Gig Completed" : "Failed! \n-1 Respect";
+
         AudioManager.Instance.PlayOneShot(_won ? "win" : "lose");
 
         StartCoroutine(Shutdown());

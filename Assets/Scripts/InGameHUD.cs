@@ -25,6 +25,8 @@ public class InGameHUD : SceneSingleton<InGameHUD>
     [SerializeField] private TMP_Text TimeRemainingText;
     [SerializeField] private GameObject WaitingText;
 
+   
+
     [SerializeField] private TMP_Text RespawnTimerText;
 
     [SerializeField] private TMP_Text ISPScoreboard;
@@ -32,6 +34,7 @@ public class InGameHUD : SceneSingleton<InGameHUD>
 
     [Header("EndGame")]
     public TMP_Text EndGameText;
+    public TMP_Text EndGameTextDesc;
     [Space]
 
     public float MinCroshairOuterCircle = 80;

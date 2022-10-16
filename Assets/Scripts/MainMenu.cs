@@ -9,6 +9,8 @@ public class MainMenu : MonoBehaviour
 {
     public GameObject Root;
 
+    public TMP_InputField NickNameField;
+
     [Header("Session Creation")]
     public GameObject CreationPanel;
     public TMP_InputField NameField;
@@ -38,6 +40,8 @@ public class MainMenu : MonoBehaviour
 
         RegionDropdown.ClearOptions();
         RegionDropdown.AddOptions(options);
+
+        NickNameField.onValueChanged.AddListener((string newName) => PlayerData.Instance.SetNickname(newName));
     }
     private void OnDestroy()
     {

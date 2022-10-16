@@ -79,6 +79,8 @@ public class Plug : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+       
+
         if (!Object.HasStateAuthority)
             return;
 
@@ -119,6 +121,12 @@ public class Plug : NetworkBehaviour
         {
             KCCOnTop.Remove(kcc);
         }
+
+        print(KCCOnTop.Count);
+
+        var rot = Quaternion.LookRotation(LastKinematicVelocity + new Vector3(0,0,90), Vector3.up);
+
+        transform.rotation = rot;
     }
 
     void CheckIfDistanceIsReached()
@@ -147,7 +155,7 @@ public class Plug : NetworkBehaviour
 
     private void MoveForward()
     {
-        if(LastWaypointCount >= Waypoints.Count - 1)
+        if (LastWaypointCount >= Waypoints.Count - 1)
             return;
 
         var direction = Waypoints[LastWaypointCount + 1].position - transform.position;
