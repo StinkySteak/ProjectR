@@ -15,6 +15,12 @@ public class ShakeEffect : MonoBehaviour
         Instance = this;
     }
 
+    private void OnEnable()
+    {
+        RemainingDuration = 0;
+        StopCoroutine(ShakeCo());
+    }
+
     public void Shake(float duration)
     {
         var prevDuration = RemainingDuration;

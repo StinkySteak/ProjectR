@@ -18,7 +18,7 @@ public class Cart : NetworkBehaviour
 
     Plug Plug;
 
-    public List<PlayerRef> ClosePlayers = new();
+    readonly public List<PlayerRef> ClosePlayers = new();
 
     public float DurationToBackward;
 

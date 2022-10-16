@@ -83,12 +83,6 @@ public class Weapon : NetworkBehaviour
     {
         if (!hasState)
             return;
-
-        if (Object.HasInputAuthority)
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-        }
     }
 
     public override void Spawned()
@@ -134,6 +128,7 @@ public class Weapon : NetworkBehaviour
     }
     void ShakeCamera()
     {
+        print("Shake");
         ShakeEffect.Instance.Shake(ShakeDuration);
     }
 

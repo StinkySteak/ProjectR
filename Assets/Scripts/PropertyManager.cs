@@ -38,11 +38,6 @@ public class PropertyManager : SceneSingleton<PropertyManager>
 
         InGameHUD.Instance.UniversalPanel.SetActive(true);
     }
-
-    public void SpawnPlayer()
-    {
-        Player.LocalPlayer.RequestRespawn();
-    }
     public void Suicide()
     {
         Player.LocalPlayer.RequestDespawn();
@@ -55,6 +50,8 @@ public class PropertyManager : SceneSingleton<PropertyManager>
     {
         InGameHUD.Instance.EndGamePanel.SetActive(true);
         InGameHUD.Instance.EndGameText.text = _won ? "VICTORY" : "DEFEAT";
+
+        AudioManager.Instance.PlayOneShot(_won ? "win" : "lose");
 
         StartCoroutine(Shutdown());
     }

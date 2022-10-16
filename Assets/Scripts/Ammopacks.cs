@@ -8,7 +8,7 @@ public class Ammopacks : NetworkBehaviour
     public int Magazine = 3;
 
 
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (Object == null)
             return;

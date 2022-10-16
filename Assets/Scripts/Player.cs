@@ -29,6 +29,10 @@ public class Player : NetworkBehaviour
     [Networked(OnChanged = nameof(OnInitialized)), HideInInspector] public bool IsInitialized { get; set; }
     public event Action OnPlayerInitialized;
 
+    const int RespawnDelay = 5;
+    [Networked,HideInInspector] public TickTimer RespawnTimer { get; set; }
+    [Networked, HideInInspector] bool IsRespawning { get; set; } = false;
+
     static void OnPlayerStateChanged(Changed<Player> changed)
     {
         if (!changed.Behaviour.HasInputAuthority)
@@ -37,10 +41,33 @@ public class Player : NetworkBehaviour
         PropertyManager.Instance.UpdateProperty(changed.Behaviour.State == PlayerState.Spawned);
 
         if (changed.Behaviour.State == PlayerState.Spawned)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority)
             return;
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if(State == PlayerState.Despawned && !IsRespawning)
+        {
+            RespawnTimer = TickTimer.CreateFromSeconds(Runner, RespawnDelay);
+            IsRespawning = true;
+        }
+
+        if(!RespawnTimer.IsTrueRunning() && State == PlayerState.Despawned && IsRespawning)
+        {
+            RequestRespawn(Object.InputAuthority);
+        }
     }
 
     static void OnInitialized(Changed<Player> changed)
@@ -54,7 +81,7 @@ public class Player : NetworkBehaviour
         {
             PropertyManager.Instance.UpdateProperty(false);
             LocalPlayer = this;
-            RPC_SetupPlayer(PlayerData.Instance.Nickname, PlayerData.Instance.Team);
+            RPC_SetupPlayer(PlayerData.Instance.Nickname);
         }
 
         if (Object.HasStateAuthority)
@@ -64,44 +91,43 @@ public class Player : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    void RPC_SetupPlayer(string _nickname, Team _team)
+    void RPC_SetupPlayer(string _nickname)
     {
         Nickname = _nickname;
-      //  Team = _team;
-
         IsInitialized = true;
     }
-    public void RequestRespawn()
-    {
-        RPC_RequestRespawn(Runner.LocalPlayer, PropertyManager.Instance.SelectedPrimaryWeaponIndex);
-    }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    void RPC_RequestRespawn(PlayerRef _ref, int _selectedPrimaryWeapon)
+    void RequestRespawn(PlayerRef _ref)
     {
         if (PlayerManager.Instance.TryGetPlayer(_ref, out var player))
         {
             if (player.State == PlayerState.Spawned)
                 return;
 
-            LevelManager.Instance.SpawnPlayerController(_ref, _selectedPrimaryWeapon);
+            if (!player.IsInitialized)
+                return;
+
+            var selectedWeaponIndex = Team == Team.ISP ? 0 : 1;
+
+            LevelManager.Instance.SpawnPlayerController(_ref, selectedWeaponIndex);
+            IsRespawning = false;
         }
     }
     public void RequestDespawn()
     {
         RPC_RequestDespawn();
     }
-    public void Despawn()
+    public void Despawn(bool addDeath)
     {
         if (PlayerManager.Instance.TryGetPlayerObj(Object.InputAuthority, out var player))
         {
-            LevelManager.Instance.OnPlayerDespawned(player.Object);
+            LevelManager.Instance.OnPlayerDespawned(player.Object, addDeath);
         }
     }
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     void RPC_RequestDespawn()
     {
-        Despawn();
+        Despawn(true);
     }
     public override void Despawned(NetworkRunner runner, bool hasState)
     {

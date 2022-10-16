@@ -15,6 +15,8 @@ public class InGameHUD : SceneSingleton<InGameHUD>
     public GameObject UniversalPanel;
     public GameObject EndGamePanel;
 
+    [Space]
+
     [SerializeField] private TMP_Text HealthText;
     [SerializeField] private TMP_Text AmmoText;
     [SerializeField] private Image CrosshairOuterCircle;
@@ -22,6 +24,8 @@ public class InGameHUD : SceneSingleton<InGameHUD>
     [SerializeField] private TMP_Text ContestedText;
     [SerializeField] private TMP_Text TimeRemainingText;
     [SerializeField] private GameObject WaitingText;
+
+    [SerializeField] private TMP_Text RespawnTimerText;
 
     [SerializeField] private TMP_Text ISPScoreboard;
     [SerializeField] private TMP_Text HackerScoreboard;
@@ -88,10 +92,16 @@ public class InGameHUD : SceneSingleton<InGameHUD>
     {
         bool value = !PausePanel.activeInHierarchy;
 
-        Cursor.lockState = value ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = value;
 
         PausePanel.SetActive(value);
+
+        if (Player.LocalPlayer == null)
+            value = false;
+
+        value = Player.LocalPlayer.State == PlayerState.Spawned ? value : true;
+
+        Cursor.lockState = value ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = value;
     }
 
     private void OnRender()
@@ -102,7 +112,16 @@ public class InGameHUD : SceneSingleton<InGameHUD>
         UpdateTimer();
         UpdateOther();
         GenerateScoreboard();
+
+        if (Player.LocalPlayer == null)
+            return;
+
+        RespawnTimerText.text = 
+            (Mathf.RoundToInt(Player.LocalPlayer.RespawnTimer.RemainingTime(RunnerInstance.NetworkRunner).GetValueOrDefault() + 0.5f) ).ToString();
     }
+
+
+
     void UpdateOther()
     {
         WaitingText.SetActive(LevelManager.Instance.GameStatus.State == State.Waiting);

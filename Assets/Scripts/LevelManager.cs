@@ -16,7 +16,6 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     [Networked, HideInInspector] public float DefendingDuration { get; set; }
 
-
     [Serializable]
     public class Advancement
     {
@@ -88,11 +87,20 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
     {
         if (GameStatus.State == State.End)
             PropertyManager.Instance.OnGameEnd(GameStatus.WinningTeam == Player.LocalPlayer.Team);
+
+        if(GameStatus.State == State.Running)
+            AudioManager.Instance.PlayOneShot("advance");
     }
 
     static void OnAdvanceChanged(Changed<LevelManager> changed)
     {
+        changed.Behaviour.OnAdvanceChanged();
         changed.Behaviour.UpdateAdvanceProperties();
+    }
+
+    void OnAdvanceChanged()
+    {
+        AudioManager.Instance.PlayOneShot("advance");
     }
 
     public override void Render()
@@ -138,7 +146,7 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         foreach (var player in PlayerManager.Instance.SpawnedPlayers.Values)
         {
-            player.Despawn();
+            player.Despawn(false);
         }
     }
 
@@ -186,12 +194,17 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         Instance = this;
     }
 
-    public void OnPlayerDespawned(NetworkObject obj)
+    public void OnPlayerDespawned(NetworkObject obj, bool _addDeath = true)
     {
+        if (obj == null)
+            return;
+
         if (PlayerManager.Instance.TryGetPlayer(obj.InputAuthority, out var player))
         {
             player.State = PlayerState.Despawned;
-            player.Death++;
+
+            if (_addDeath)
+                player.Death++;
 
             Runner.Despawn(obj);
         }
@@ -245,7 +258,9 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         if (PlayerManager.Instance.TryGetPlayerTeam(_ref, out var team))
         {
-            Runner.Spawn(PlayerPrefab, GetSpawnPos(team), Quaternion.identity, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
+            var spawn = GetSpawn(team);
+
+            Runner.Spawn(PlayerPrefab, spawn.position, spawn.rotation, _ref, (NetworkRunner runner, NetworkObject obj) => SetWeapon(obj));
         }
 
         void SetWeapon(NetworkObject obj)
@@ -257,13 +272,13 @@ public class LevelManager : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    Vector3 GetSpawnPos(Team _team)
+    Transform GetSpawn(Team _team)
     {
         foreach (var adv in ActiveAdvance.All)
         {
             if (adv.Team == _team)
             {
-                return adv.SpawnPos[UnityEngine.Random.Range(0, adv.SpawnPos.Length - 1)].position;
+                return adv.SpawnPos[UnityEngine.Random.Range(0, adv.SpawnPos.Length - 1)];
             }
         }
 

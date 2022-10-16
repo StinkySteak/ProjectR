@@ -72,7 +72,9 @@ public class PlayerManager : Singleton<PlayerManager>
     public void AddPlayerObj(PlayerRef _ref, PlayerSetup _player)
     {
         if (SpawnedPlayerObjects.ContainsKey(_ref))
-            return;
+        {
+            SpawnedPlayerObjects.Remove(_ref);
+        }
 
         SpawnedPlayerObjects.Add(_ref, _player);
     }

@@ -19,6 +19,8 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
 
     public static event Action<List<SessionInfo>> OnSessionListUpdated;
 
+    public static bool IsJoiningLobby = false;
+
     void Start()
     {
         JoinLobby();
@@ -34,7 +36,9 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
         yield return new WaitForSeconds(2);
 
         if (!RunnerInstance.GetSafeInstance.InstanceFreshRunner.LobbyInfo.IsValid)
+        {
             RunnerInstance.NetworkRunner.JoinSessionLobby(SessionLobby.ClientServer);
+        }
 
         Runner.AddCallbacks(this);
         Runner.AddCallbacks(CallbackManager.Instance);
@@ -68,6 +72,7 @@ public class PhotonService : Singleton<PhotonService>, INetworkRunnerCallbacks
     void OnShutdown()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        JoinLobby();
     }
 
     void INetworkRunnerCallbacks.OnConnectedToServer(NetworkRunner runner)
